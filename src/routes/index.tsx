@@ -22,6 +22,8 @@ const Bookings = lazy(() => import('@/pages/bookings/Bookings'))
 const Reviews = lazy(() => import('@/pages/reviews/Reviews'))
 const Reports = lazy(() => import('@/pages/reports/Reports'))
 const Analytics = lazy(() => import('@/pages/analytics/Analytics'))
+const Settings = lazy(() => import('@/pages/settings/Settings'))
+const Admins = lazy(() => import('@/pages/admins/Admins'))
 const ModulePlaceholder = lazy(
   () => import('@/pages/placeholders/ModulePlaceholder'),
 )
@@ -165,7 +167,7 @@ const router = createBrowserRouter([
         path: DASHBOARD_ROUTES.SETTINGS,
         element: (
           <LazyPage>
-            <ModulePlaceholder />
+            <Settings />
           </LazyPage>
         ),
       },
@@ -173,7 +175,7 @@ const router = createBrowserRouter([
         path: DASHBOARD_ROUTES.ADMINS,
         element: (
           <LazyPage>
-            <ModulePlaceholder />
+            <Admins />
           </LazyPage>
         ),
       },

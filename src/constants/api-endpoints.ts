@@ -88,6 +88,23 @@ export const API_ENDPOINTS = {
     REVIEWS: '/admin/analytics/reviews',
     REPORTS: '/admin/analytics/reports',
   },
+  SETTINGS: {
+    LIST: '/admin/settings',
+    UPDATE: '/admin/settings',
+  },
+  ADMINS: {
+    LIST: '/admin/admins',
+    DETAILS: (id: string) => `/admin/admins/${id}`,
+    CREATE: '/admin/admins',
+    UPDATE: (id: string) => `/admin/admins/${id}`,
+    UPDATE_STATUS: (id: string) => `/admin/admins/${id}/status`,
+    DELETE: (id: string) => `/admin/admins/${id}`,
+  },
+  AUDIT_LOGS: {
+    LIST: '/admin/audit-logs',
+    DETAILS: (id: string) => `/admin/audit-logs/${id}`,
+    EXPORT: '/admin/audit-logs/export',
+  },
 } as const
 
 export type ApiEndpoint =
