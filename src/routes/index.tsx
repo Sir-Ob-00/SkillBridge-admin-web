@@ -24,6 +24,7 @@ const Reports = lazy(() => import('@/pages/reports/Reports'))
 const Analytics = lazy(() => import('@/pages/analytics/Analytics'))
 const Settings = lazy(() => import('@/pages/settings/Settings'))
 const Admins = lazy(() => import('@/pages/admins/Admins'))
+const AuditLogs = lazy(() => import('@/pages/audit-logs/AuditLogs'))
 const ModulePlaceholder = lazy(
   () => import('@/pages/placeholders/ModulePlaceholder'),
 )
@@ -183,7 +184,7 @@ const router = createBrowserRouter([
         path: DASHBOARD_ROUTES.AUDIT_LOGS,
         element: (
           <LazyPage>
-            <ModulePlaceholder />
+            <AuditLogs />
           </LazyPage>
         ),
       },
@@ -210,3 +211,4 @@ const router = createBrowserRouter([
 export function AppRouter() {
   return <RouterProvider router={router} />
 }
+

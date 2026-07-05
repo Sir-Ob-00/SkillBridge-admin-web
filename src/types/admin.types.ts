@@ -1,5 +1,4 @@
-export type AdminRole = 'super_admin' | 'admin' | 'support_staff'
-
+﻿export type AdminRole = 'super_admin' | 'admin' | 'support_staff'
 export type AdminStatus = 'active' | 'inactive'
 
 export interface AdminPermissions {
@@ -23,6 +22,8 @@ export interface Admin {
 }
 
 export interface AdminFilters {
+  page?: number
+  limit?: number
   search?: string
   role?: AdminRole
   status?: AdminStatus
@@ -59,4 +60,11 @@ export interface AdminStatistics {
   activeAdmins: number
   inactiveAdmins: number
   superAdmins: number
+}
+
+export interface AdminFormValues {
+  name: string
+  email: string
+  role: AdminRole
+  status: AdminStatus
 }
