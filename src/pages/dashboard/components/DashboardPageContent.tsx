@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Star,
   TrendingUp,
+  FileCheck,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/feedback/PageHeader'
@@ -19,7 +20,9 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
 import { TopArtisans } from '@/components/dashboard/TopArtisans'
 import { TopCategories } from '@/components/dashboard/TopCategories'
+import { getApplicationStatistics } from '@/services/artisanApplications.service'
 import { getDashboardOverview } from '@/services/dashboard.service'
+import type { ApplicationStatistics } from '@/types/artisanApplication.types'
 import {
   LineChart,
   Line,
@@ -54,6 +57,11 @@ export default function Dashboard() {
   } = useQuery({
     queryKey: ['dashboard'],
     queryFn: getDashboardOverview,
+  })
+
+  const { data: applicationStats } = useQuery<ApplicationStatistics>({
+    queryKey: ['application-statistics'],
+    queryFn: getApplicationStatistics,
   })
 
   const kpiCards = useMemo(() => {
@@ -155,8 +163,35 @@ export default function Dashboard() {
         icon: Star,
         variant: 'info' as const,
       },
+      // Artisan Applications
+      ...(applicationStats ? [
+        {
+          title: 'Pending Applications',
+          value: applicationStats.pending,
+          icon: FileCheck,
+          variant: 'warning' as const,
+        },
+        {
+          title: 'Under Review',
+          value: applicationStats.underReview,
+          icon: FileCheck,
+          variant: 'info' as const,
+        },
+        {
+          title: 'Approved Applications',
+          value: applicationStats.approved,
+          icon: FileCheck,
+          variant: 'success' as const,
+        },
+        {
+          title: 'Changes Requested',
+          value: applicationStats.changesRequested,
+          icon: FileCheck,
+          variant: 'secondary' as const,
+        },
+      ] : []),
     ]
-  }, [dashboardData])
+  }, [dashboardData, applicationStats])
 
   const bookingTrendsData = useMemo(() => {
     if (!dashboardData) return []

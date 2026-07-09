@@ -1,4 +1,4 @@
-﻿import type { Artisan, ArtisanStatus, VerificationStatus } from '@/types/artisan.types'
+import type { ArtisanDocument, ArtisanStatus, VerificationStatus } from '@/types/artisan.types'
 
 export function getInitials(firstName: string, lastName: string) {
   return `${firstName[0]}${lastName[0]}`.toUpperCase()
@@ -34,15 +34,28 @@ export function getVerificationVariant(status: VerificationStatus): 'success' | 
   }
 }
 
-export function hasActiveArtisanFilters(filters: {
-  search?: string
-  status?: ArtisanStatus
-  verificationStatus?: VerificationStatus
-  category?: string
-}) {
-  return Boolean(filters.search || filters.status || filters.verificationStatus || filters.category)
+export function getDocumentStatusVariant(
+  status: ArtisanDocument['status'],
+): 'success' | 'warning' | 'danger' {
+  switch (status) {
+    case 'approved':
+      return 'success'
+    case 'rejected':
+      return 'danger'
+    case 'pending':
+    default:
+      return 'warning'
+  }
 }
 
-export function isSameArtisan(left: Artisan | null, right: Artisan | null) {
-  return Boolean(left && right && left.id === right.id)
+export function hasActiveArtisanFilters(filters: any): boolean {
+  return Boolean(
+    filters.search ||
+    filters.status ||
+    filters.verificationStatus ||
+    filters.category ||
+    filters.location ||
+    filters.dateFrom ||
+    filters.dateTo,
+  )
 }

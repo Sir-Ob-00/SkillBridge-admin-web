@@ -17,25 +17,24 @@ export function DashboardLayout() {
     setSidebarMobileOpen,
   } = useUiStore()
 
-  // Initialize real-time notifications
   useAdminNotifications()
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar
         collapsed={!isMobile && sidebarCollapsed}
         mobileOpen={sidebarMobileOpen}
         onMobileClose={() => setSidebarMobileOpen(false)}
       />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={toggleSidebar}
           onMobileMenuOpen={() => setSidebarMobileOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}

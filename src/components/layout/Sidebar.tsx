@@ -14,6 +14,7 @@ import {
   Wrench,
   ScrollText,
   Flag,
+  FileCheck,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DASHBOARD_ROUTES } from '@/config/routes'
@@ -25,6 +26,7 @@ const navItems = [
   { label: 'Dashboard', href: DASHBOARD_ROUTES.HOME, icon: LayoutDashboard },
   { label: 'Students', href: DASHBOARD_ROUTES.STUDENTS, icon: Users },
   { label: 'Artisans', href: DASHBOARD_ROUTES.ARTISANS, icon: Wrench },
+  { label: 'Artisan Applications', href: '/dashboard/artisan-applications', icon: FileCheck },
   { label: 'Categories', href: DASHBOARD_ROUTES.CATEGORIES, icon: FolderTree },
   { label: 'Verification', href: DASHBOARD_ROUTES.VERIFICATION, icon: ShieldCheck },
   { label: 'Bookings', href: DASHBOARD_ROUTES.BOOKINGS, icon: BookOpen },
@@ -48,25 +50,25 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
   const sidebarContent = (
     <aside
       className={cn(
-        'flex h-full flex-col border-r border-sidebar-border bg-sidebar',
+        'flex h-full flex-col border-r border-primary/20 bg-primary text-primary-foreground',
         collapsed ? 'w-[72px]' : 'w-64',
       )}
       aria-label="Main navigation"
     >
       <div
         className={cn(
-          'flex h-16 items-center border-b border-sidebar-border px-4',
+          'flex h-16 items-center border-b border-primary/20 px-4',
           collapsed && 'justify-center px-2',
         )}
       >
         <div className="flex items-center gap-2">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-primary-foreground text-primary">
             <ClipboardList className="size-5" aria-hidden="true" />
           </div>
           {!collapsed && (
             <div>
-              <p className="text-sm font-bold text-sidebar-foreground">SkillBridge</p>
-              <p className="text-xs text-muted-foreground">Admin Panel</p>
+              <p className="text-sm font-bold text-primary-foreground">SkillBridge</p>
+              <p className="text-xs text-primary-foreground/75">Admin Panel</p>
             </div>
           )}
         </div>
@@ -86,8 +88,8 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
       </nav>
 
       {!collapsed && (
-        <div className="border-t border-sidebar-border p-4">
-          <p className="text-xs text-muted-foreground">
+        <div className="border-t border-primary/20 p-4">
+          <p className="text-xs text-primary-foreground/75">
             {env.appName} v{env.appVersion}
           </p>
         </div>
@@ -97,10 +99,8 @@ export function Sidebar({ collapsed, mobileOpen, onMobileClose }: SidebarProps) 
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <div className="hidden lg:block">{sidebarContent}</div>
+      <div className="sticky top-0 hidden h-screen self-start lg:block">{sidebarContent}</div>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>

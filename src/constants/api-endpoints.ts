@@ -105,6 +105,15 @@ export const API_ENDPOINTS = {
     DETAILS: (id: string) => `/admin/audit-logs/${id}`,
     EXPORT: '/admin/audit-logs/export',
   },
+  ARTISAN_APPLICATIONS: {
+    LIST: '/admin/artisan-applications',
+    DETAILS: (id: string) => `/admin/artisan-applications/${id}`,
+    STATISTICS: '/admin/artisan-applications/statistics',
+    APPROVE: (id: string) => `/admin/artisan-applications/${id}/approve`,
+    REJECT: (id: string) => `/admin/artisan-applications/${id}/reject`,
+    REQUEST_CHANGES: (id: string) => `/admin/artisan-applications/${id}/request-changes`,
+    UPDATE_STATUS: (id: string) => `/admin/artisan-applications/${id}/status`,
+  },
 } as const
 
 export type ApiEndpoint =
