@@ -86,8 +86,12 @@ export async function dismissReport(
 export async function addReportNote(
   id: string,
   payload: AddReportNotePayload,
-): Promise<void> {
-  await apiClient.post(API_ENDPOINTS.REPORTS.NOTES(id), payload)
+): Promise<Report> {
+  const { data } = await apiClient.post<ApiResponse<Report>>(
+    API_ENDPOINTS.REPORTS.ADD_NOTE(id),
+    payload,
+  )
+  return data.data
 }
 
 export async function getReportStatistics(): Promise<ReportStatistics> {

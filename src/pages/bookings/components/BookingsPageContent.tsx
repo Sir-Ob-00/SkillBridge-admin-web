@@ -19,7 +19,7 @@ import {
   getBookingById,
   cancelBooking,
   completeBooking,
-  resolveDispute,
+  disputeBooking,
   getBookingStatistics,
   exportBookings,
 } from '@/services/bookings.service'
@@ -104,9 +104,9 @@ export default function Bookings() {
     },
   })
 
-  const resolveDisputeMutation = useMutation({
-    mutationFn: ({ id, resolution, adminNotes, decision, refundAmount }: { id: string; resolution: string; adminNotes: string; decision: 'favor_student' | 'favor_artisan' | 'split'; refundAmount?: number }) =>
-      resolveDispute(id, { resolution, adminNotes, decision, refundAmount }),
+  const disputeBookingMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      disputeBooking(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
       queryClient.invalidateQueries({ queryKey: ['booking-statistics'] })
@@ -173,8 +173,8 @@ export default function Bookings() {
     }
   }
 
-  const handleResolveDispute = async (id: string, resolution: string, adminNotes: string, decision: 'favor_student' | 'favor_artisan' | 'split', refundAmount?: number) => {
-    await resolveDisputeMutation.mutateAsync({ id, resolution, adminNotes, decision, refundAmount })
+  const handleResolveDispute = async (id: string, payload: any) => {
+    await disputeBookingMutation.mutateAsync({ id, payload })
     if (selectedBooking?.id === id) {
       setIsDrawerOpen(false)
       setSelectedBooking(null)

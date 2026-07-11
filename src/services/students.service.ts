@@ -29,6 +29,45 @@ export async function getStudents(
   }
 }
 
+export async function getStudentStatistics(): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.STUDENTS.STATISTICS,
+  )
+  return data.data
+}
+
+export async function exportStudents(): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.STUDENTS.EXPORT,
+  )
+  return data.data
+}
+
+export async function updateStudent(
+  id: string,
+  payload: any,
+): Promise<Student> {
+  const { data } = await apiClient.patch<ApiResponse<Student>>(
+    API_ENDPOINTS.STUDENTS.UPDATE(id),
+    payload,
+  )
+  return data.data
+}
+
+export async function suspendStudent(id: string): Promise<Student> {
+  const { data } = await apiClient.patch<ApiResponse<Student>>(
+    API_ENDPOINTS.STUDENTS.SUSPEND(id),
+  )
+  return data.data
+}
+
+export async function unsuspendStudent(id: string): Promise<Student> {
+  const { data } = await apiClient.patch<ApiResponse<Student>>(
+    API_ENDPOINTS.STUDENTS.UNSUSPEND(id),
+  )
+  return data.data
+}
+
 export async function getStudentById(id: string): Promise<StudentDetails> {
   const { data } = await apiClient.get<ApiResponse<StudentDetails>>(
     API_ENDPOINTS.STUDENTS.DETAILS(id),

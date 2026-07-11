@@ -23,29 +23,37 @@ import { RefreshCw } from 'lucide-react'
 export default function Analytics() {
   const [dateRange, setDateRange] = useState<DateRange>('30d')
 
+  const getAnalyticsParams = (range: DateRange) => {
+    if (range === 'custom') return {}
+    const days = parseInt(range.replace('d', ''))
+    return { days }
+  }
+
+  const params = getAnalyticsParams(dateRange)
+
   const { data: overview, isLoading: isLoadingOverview, error: overviewError, refetch: refetchOverview } = useQuery({
     queryKey: ['analytics-overview', dateRange],
-    queryFn: () => getOverview(dateRange),
+    queryFn: () => getOverview(params),
   })
 
   const { data: userAnalytics, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['analytics-users', dateRange],
-    queryFn: () => getUserAnalytics(dateRange),
+    queryFn: () => getUserAnalytics(params),
   })
 
   const { data: bookingAnalytics, isLoading: isLoadingBookings } = useQuery({
     queryKey: ['analytics-bookings', dateRange],
-    queryFn: () => getBookingAnalytics(dateRange),
+    queryFn: () => getBookingAnalytics(params),
   })
 
   const { data: revenueAnalytics, isLoading: isLoadingRevenue } = useQuery({
     queryKey: ['analytics-revenue', dateRange],
-    queryFn: () => getRevenueAnalytics(dateRange),
+    queryFn: () => getRevenueAnalytics(params),
   })
 
   const { data: categoryAnalytics, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['analytics-categories', dateRange],
-    queryFn: () => getCategoryAnalytics(dateRange),
+    queryFn: () => getCategoryAnalytics(params),
   })
 
   const handleDateRangeChange = (newRange: DateRange) => {

@@ -2,7 +2,7 @@ import { debounce } from 'lodash-es'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { getArtisans, getArtisanById, updateArtisanStatus, verifyArtisan, deleteArtisan } from '@/services/artisans.service'
+import { getArtisans, getArtisanById, updateArtisanStatus, deleteArtisan } from '@/services/artisans.service'
 import type { Artisan, ArtisanFilters, ArtisanStatus, VerificationStatus } from '@/types/artisan.types'
 
 const defaultFilters: ArtisanFilters = {
@@ -52,15 +52,6 @@ export function useArtisans() {
     onError: () => toast.error('Failed to update artisan status'),
   })
 
-  const verifyMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: { status: 'verified' | 'rejected'; note?: string } }) => verifyArtisan(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['artisans'] })
-      toast.success('Artisan verification updated successfully')
-    },
-    onError: () => toast.error('Failed to update artisan verification'),
-  })
-
   const deleteMutation = useMutation({
     mutationFn: deleteArtisan,
     onSuccess: () => {
@@ -98,10 +89,6 @@ export function useArtisans() {
     }
   }
 
-  const handleVerify = async (id: string, payload: { status: 'verified' | 'rejected'; note?: string }) => {
-    await verifyMutation.mutateAsync({ id, payload })
-  }
-
   const handleDelete = async (id: string) => {
     await deleteMutation.mutateAsync(id)
     closeDrawer()
@@ -127,7 +114,6 @@ export function useArtisans() {
     handlePageChange,
     handleViewDetails,
     handleStatusToggle,
-    handleVerify,
     handleDelete,
     handleResetFilters,
   }

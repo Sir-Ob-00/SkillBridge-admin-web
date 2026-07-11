@@ -11,58 +11,66 @@ import type {
 } from '@/types/analytics.types'
 import apiClient from '@/api/axios'
 
-export async function getOverview(dateRange?: string): Promise<AnalyticsOverview['overview']> {
+export async function getAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.ANALYTICS.BASE,
+    { params },
+  )
+  return data.data
+}
+
+export async function getOverview(params?: { from?: string; to?: string; days?: number }): Promise<AnalyticsOverview['overview']> {
   const { data } = await apiClient.get<ApiResponse<AnalyticsOverview['overview']>>(
     API_ENDPOINTS.ANALYTICS.OVERVIEW,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getUserAnalytics(dateRange?: string): Promise<UserAnalytics> {
+export async function getUserAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<UserAnalytics> {
   const { data } = await apiClient.get<ApiResponse<UserAnalytics>>(
     API_ENDPOINTS.ANALYTICS.USERS,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getBookingAnalytics(dateRange?: string): Promise<BookingAnalytics> {
+export async function getBookingAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<BookingAnalytics> {
   const { data } = await apiClient.get<ApiResponse<BookingAnalytics>>(
     API_ENDPOINTS.ANALYTICS.BOOKINGS,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getRevenueAnalytics(dateRange?: string): Promise<RevenueAnalytics> {
+export async function getRevenueAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<RevenueAnalytics> {
   const { data } = await apiClient.get<ApiResponse<RevenueAnalytics>>(
     API_ENDPOINTS.ANALYTICS.REVENUE,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getCategoryAnalytics(dateRange?: string): Promise<CategoryAnalytics> {
+export async function getCategoryAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<CategoryAnalytics> {
   const { data } = await apiClient.get<ApiResponse<CategoryAnalytics>>(
     API_ENDPOINTS.ANALYTICS.CATEGORIES,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getReviewAnalytics(dateRange?: string): Promise<ReviewAnalytics> {
+export async function getReviewAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<ReviewAnalytics> {
   const { data } = await apiClient.get<ApiResponse<ReviewAnalytics>>(
     API_ENDPOINTS.ANALYTICS.REVIEWS,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }
 
-export async function getReportAnalytics(dateRange?: string): Promise<ReportAnalytics> {
+export async function getReportAnalytics(params?: { from?: string; to?: string; days?: number }): Promise<ReportAnalytics> {
   const { data } = await apiClient.get<ApiResponse<ReportAnalytics>>(
     API_ENDPOINTS.ANALYTICS.REPORTS,
-    { params: { dateRange } },
+    { params },
   )
   return data.data
 }

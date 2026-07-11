@@ -9,7 +9,6 @@ import type {
   UpdateBookingStatusPayload,
   CancelBookingPayload,
   CompleteBookingPayload,
-  ResolveDisputePayload,
 } from '@/types/booking.types'
 import apiClient from '@/api/axios'
 
@@ -72,12 +71,12 @@ export async function completeBooking(
   return data.data
 }
 
-export async function resolveDispute(
+export async function disputeBooking(
   id: string,
-  payload: ResolveDisputePayload,
+  payload?: any,
 ): Promise<Booking> {
   const { data } = await apiClient.patch<ApiResponse<Booking>>(
-    API_ENDPOINTS.BOOKINGS.RESOLVE_DISPUTE(id),
+    API_ENDPOINTS.BOOKINGS.DISPUTE(id),
     payload,
   )
   return data.data

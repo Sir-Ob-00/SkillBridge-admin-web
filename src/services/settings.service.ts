@@ -5,7 +5,7 @@ import apiClient from '@/api/axios'
 
 export async function getSettings(): Promise<SystemSettings> {
   const { data } = await apiClient.get<ApiResponse<SystemSettings>>(
-    API_ENDPOINTS.SETTINGS.LIST,
+    API_ENDPOINTS.SETTINGS.GET,
   )
   return data.data
 }

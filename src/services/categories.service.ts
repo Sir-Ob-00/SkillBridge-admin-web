@@ -6,8 +6,6 @@ import type {
   PaginatedCategoryResponse,
   CategoryForm,
   CategoryOrder,
-  CategoryStatistics,
-  CategoryOverviewStatistics,
 } from '@/types/category.types'
 import apiClient from '@/api/axios'
 
@@ -79,18 +77,9 @@ export async function deleteCategory(id: string): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.CATEGORIES.DELETE(id))
 }
 
-export async function getCategoryStatistics(
-  id: string,
-): Promise<CategoryStatistics> {
-  const { data } = await apiClient.get<ApiResponse<CategoryStatistics>>(
-    API_ENDPOINTS.CATEGORIES.STATISTICS(id),
-  )
-  return data.data
-}
-
-export async function getCategoryOverviewStatistics(): Promise<CategoryOverviewStatistics> {
-  const { data } = await apiClient.get<ApiResponse<CategoryOverviewStatistics>>(
-    API_ENDPOINTS.CATEGORIES.OVERVIEW_STATISTICS,
+export async function getCategoryStatistics(): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.CATEGORIES.STATISTICS,
   )
   return data.data
 }

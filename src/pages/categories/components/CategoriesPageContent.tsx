@@ -22,7 +22,6 @@ import {
   updateCategoryStatus,
   reorderCategories,
   deleteCategory,
-  getCategoryOverviewStatistics,
   getCategoryStatistics,
 } from '@/services/categories.service'
 import type { Category, CategoryFilters, CategoryStatus, CategoryForm } from '@/types/category.types'
@@ -84,12 +83,12 @@ export default function Categories() {
 
   const { data: overviewStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['category-overview-statistics'],
-    queryFn: getCategoryOverviewStatistics,
+    queryFn: getCategoryStatistics,
   })
 
   const { data: categoryStatistics, isLoading: isLoadingCategoryStats } = useQuery({
     queryKey: ['category-statistics', selectedCategory?.id],
-    queryFn: () => getCategoryStatistics(selectedCategory!.id),
+    queryFn: getCategoryStatistics,
     enabled: !!selectedCategory && isDetailsDrawerOpen,
   })
 

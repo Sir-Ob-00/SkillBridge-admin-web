@@ -28,7 +28,6 @@ export function ArtisansPageContent() {
     handlePageChange,
     handleViewDetails,
     handleStatusToggle,
-    handleVerify,
     handleDelete,
     handleResetFilters,
   } = useArtisans()
@@ -71,7 +70,7 @@ export function ArtisansPageContent() {
               artisans={artisans}
               onViewDetails={handleViewDetails}
               onStatusToggle={handleStatusToggle}
-              onVerify={handleVerify}
+              onVerify={() => {}}
               onDelete={handleDelete}
             />
           </div>
@@ -80,7 +79,7 @@ export function ArtisansPageContent() {
             artisans={artisans}
             onViewDetails={handleViewDetails}
             onStatusToggle={handleStatusToggle}
-            onVerify={handleVerify}
+            onVerify={() => {}}
             onDelete={handleDelete}
           />
 
@@ -105,7 +104,7 @@ export function ArtisansPageContent() {
         isOpen={isDrawerOpen}
         onClose={closeDrawer}
         onStatusChange={handleStatusToggle}
-        onVerify={handleVerify}
+        onVerify={() => {}}
         onDelete={handleDelete}
       />
     </PageContainer>

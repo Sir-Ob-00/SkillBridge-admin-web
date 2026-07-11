@@ -6,10 +6,6 @@ import type {
   PaginatedArtisanResponse,
   ArtisanDetails,
   ArtisanPortfolioItem,
-  ArtisanReview,
-  ArtisanBookingSummary,
-  ArtisanDocument,
-  VerifyArtisanPayload,
 } from '@/types/artisan.types'
 import apiClient from '@/api/axios'
 
@@ -32,6 +28,59 @@ export async function getArtisans(
   }
 }
 
+export async function getArtisanStatistics(): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.ARTISANS.STATISTICS,
+  )
+  return data.data
+}
+
+export async function exportArtisans(): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.ARTISANS.EXPORT,
+  )
+  return data.data
+}
+
+export async function getArtisanServices(id: string): Promise<any[]> {
+  const { data } = await apiClient.get<ApiResponse<any[]>>(
+    API_ENDPOINTS.ARTISANS.SERVICES(id),
+  )
+  return data.data
+}
+
+export async function getArtisanAvailability(id: string): Promise<any> {
+  const { data } = await apiClient.get<ApiResponse<any>>(
+    API_ENDPOINTS.ARTISANS.AVAILABILITY(id),
+  )
+  return data.data
+}
+
+export async function updateArtisan(
+  id: string,
+  payload: any,
+): Promise<Artisan> {
+  const { data } = await apiClient.patch<ApiResponse<Artisan>>(
+    API_ENDPOINTS.ARTISANS.UPDATE(id),
+    payload,
+  )
+  return data.data
+}
+
+export async function suspendArtisan(id: string): Promise<Artisan> {
+  const { data } = await apiClient.patch<ApiResponse<Artisan>>(
+    API_ENDPOINTS.ARTISANS.SUSPEND(id),
+  )
+  return data.data
+}
+
+export async function unsuspendArtisan(id: string): Promise<Artisan> {
+  const { data } = await apiClient.patch<ApiResponse<Artisan>>(
+    API_ENDPOINTS.ARTISANS.UNSUSPEND(id),
+  )
+  return data.data
+}
+
 export async function getArtisanById(id: string): Promise<ArtisanDetails> {
   const { data } = await apiClient.get<ApiResponse<ArtisanDetails>>(
     API_ENDPOINTS.ARTISANS.DETAILS(id),
@@ -50,17 +99,6 @@ export async function updateArtisanStatus(
   return data.data
 }
 
-export async function verifyArtisan(
-  id: string,
-  payload: VerifyArtisanPayload,
-): Promise<Artisan> {
-  const { data } = await apiClient.patch<ApiResponse<Artisan>>(
-    API_ENDPOINTS.ARTISANS.VERIFY(id),
-    payload,
-  )
-  return data.data
-}
-
 export async function deleteArtisan(id: string): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.ARTISANS.DELETE(id))
 }
@@ -70,31 +108,6 @@ export async function getArtisanPortfolio(
 ): Promise<ArtisanPortfolioItem[]> {
   const { data } = await apiClient.get<ApiResponse<ArtisanPortfolioItem[]>>(
     API_ENDPOINTS.ARTISANS.PORTFOLIO(id),
-  )
-  return data.data
-}
-
-export async function getArtisanReviews(id: string): Promise<ArtisanReview[]> {
-  const { data } = await apiClient.get<ApiResponse<ArtisanReview[]>>(
-    API_ENDPOINTS.ARTISANS.REVIEWS(id),
-  )
-  return data.data
-}
-
-export async function getArtisanBookings(
-  id: string,
-): Promise<ArtisanBookingSummary[]> {
-  const { data } = await apiClient.get<ApiResponse<ArtisanBookingSummary[]>>(
-    API_ENDPOINTS.ARTISANS.BOOKINGS(id),
-  )
-  return data.data
-}
-
-export async function getArtisanDocuments(
-  id: string,
-): Promise<ArtisanDocument[]> {
-  const { data } = await apiClient.get<ApiResponse<ArtisanDocument[]>>(
-    API_ENDPOINTS.ARTISANS.DOCUMENTS(id),
   )
   return data.data
 }

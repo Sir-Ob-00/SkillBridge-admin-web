@@ -52,3 +52,27 @@ export async function updateAdminStatus(id: string, payload: UpdateAdminStatusPa
 export async function deleteAdmin(id: string): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.ADMINS.DELETE(id))
 }
+
+export async function getAllUsers(params?: any): Promise<any[]> {
+  const { data } = await apiClient.get<ApiResponse<any[]>>(
+    API_ENDPOINTS.USERS.LIST,
+    { params },
+  )
+  return data.data
+}
+
+export async function getStudents(params?: any): Promise<any[]> {
+  const { data } = await apiClient.get<ApiResponse<any[]>>(
+    API_ENDPOINTS.USERS.STUDENTS,
+    { params },
+  )
+  return data.data
+}
+
+export async function getArtisans(params?: any): Promise<any[]> {
+  const { data } = await apiClient.get<ApiResponse<any[]>>(
+    API_ENDPOINTS.USERS.ARTISANS,
+    { params },
+  )
+  return data.data
+}

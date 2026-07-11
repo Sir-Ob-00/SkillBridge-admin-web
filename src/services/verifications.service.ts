@@ -42,7 +42,7 @@ export async function approveVerification(
   id: string,
   payload?: ApproveVerificationPayload,
 ): Promise<VerificationRequest> {
-  const { data } = await apiClient.patch<ApiResponse<VerificationRequest>>(
+  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
     API_ENDPOINTS.VERIFICATIONS.APPROVE(id),
     payload,
   )
@@ -53,7 +53,7 @@ export async function rejectVerification(
   id: string,
   payload: RejectVerificationPayload,
 ): Promise<VerificationRequest> {
-  const { data } = await apiClient.patch<ApiResponse<VerificationRequest>>(
+  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
     API_ENDPOINTS.VERIFICATIONS.REJECT(id),
     payload,
   )
@@ -64,9 +64,31 @@ export async function requestMoreInformation(
   id: string,
   payload: RequestMoreInfoPayload,
 ): Promise<VerificationRequest> {
-  const { data } = await apiClient.patch<ApiResponse<VerificationRequest>>(
-    API_ENDPOINTS.VERIFICATIONS.REQUEST_INFO(id),
+  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
+    API_ENDPOINTS.VERIFICATIONS.REQUEST_CHANGES(id),
     payload,
+  )
+  return data.data
+}
+
+export async function addVerificationNote(
+  id: string,
+  payload: { note: string },
+): Promise<VerificationRequest> {
+  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
+    API_ENDPOINTS.VERIFICATIONS.ADD_NOTE(id),
+    payload,
+  )
+  return data.data
+}
+
+export async function updateVerificationStatus(
+  id: string,
+  status: string,
+): Promise<VerificationRequest> {
+  const { data } = await apiClient.patch<ApiResponse<VerificationRequest>>(
+    API_ENDPOINTS.VERIFICATIONS.UPDATE_STATUS(id),
+    { status },
   )
   return data.data
 }
