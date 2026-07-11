@@ -20,7 +20,8 @@ export interface LoginCredentials {
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
-  user: Admin
+  user?: Admin
+  admin?: Admin
 }
 
 export interface ForgotPasswordPayload {

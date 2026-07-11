@@ -39,6 +39,11 @@ export const useAuthStore = create<AuthState>()(
       ...initialState,
 
       setAuth: (accessToken, refreshToken, admin) => {
+        console.log('[AUTH STORE DEBUG] setAuth called')
+        console.log('[AUTH STORE DEBUG] Access token (first 20 chars):', accessToken ? accessToken.substring(0, 20) + '...' : 'null')
+        console.log('[AUTH STORE DEBUG] Refresh token exists:', !!refreshToken)
+        console.log('[AUTH STORE DEBUG] Admin:', admin)
+        
         set({
           accessToken,
           refreshToken,
@@ -47,6 +52,17 @@ export const useAuthStore = create<AuthState>()(
           roles: rolesFromAdmin(admin),
           isAuthenticated: true,
         })
+        
+        console.log('[AUTH STORE DEBUG] Auth state set, isAuthenticated:', true)
+        
+        // Verify the state was actually set
+        setTimeout(() => {
+          const state = get()
+          console.log('[AUTH STORE DEBUG] State verification after set:')
+          console.log('[AUTH STORE DEBUG] - accessToken exists:', !!state.accessToken)
+          console.log('[AUTH STORE DEBUG] - isAuthenticated:', state.isAuthenticated)
+          console.log('[AUTH STORE DEBUG] - admin:', state.admin)
+        }, 100)
       },
 
       setAdmin: (admin) => {
@@ -58,6 +74,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        console.log('[AUTH STORE DEBUG] logout called, clearing state')
         set({ ...initialState })
       },
 
@@ -79,6 +96,14 @@ export const useAuthStore = create<AuthState>()(
         roles: state.roles,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        console.log('[AUTH STORE DEBUG] Storage rehydrated')
+        console.log('[AUTH STORE DEBUG] Rehydrated state:', state)
+        if (state) {
+          console.log('[AUTH STORE DEBUG] - accessToken exists:', !!state.accessToken)
+          console.log('[AUTH STORE DEBUG] - isAuthenticated:', state.isAuthenticated)
+        }
+      },
     },
   ),
 )

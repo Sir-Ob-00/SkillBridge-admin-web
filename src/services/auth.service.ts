@@ -16,6 +16,18 @@ export async function login(
     API_ENDPOINTS.AUTH.LOGIN,
     credentials,
   )
+  
+  // Debug: Log the raw response
+  console.log('[AUTH SERVICE DEBUG] Raw login response:', JSON.stringify(data, null, 2))
+  
+  // The backend returns 'admin' but our types expect 'user'
+  // Map it to match our type definition
+  const responseData = data.data as any
+  if (responseData.admin && !responseData.user) {
+    console.log('[AUTH SERVICE DEBUG] Mapping admin to user for type compatibility')
+    responseData.user = responseData.admin
+  }
+  
   return data.data
 }
 

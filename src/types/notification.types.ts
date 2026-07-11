@@ -1,10 +1,65 @@
+import type { Paginated } from '@/types/api.types'
+
+export type NotificationType = 'info' | 'warning' | 'error' | 'success'
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: NotificationType
+  targetUserId: string
+  targetRole: string
+  read: boolean
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface NotificationFilters {
+  search?: string
+  read?: boolean
+  type?: NotificationType
+  page?: number
+  limit?: number
+}
+
+export interface NotificationStatistics {
+  total: number
+  unread: number
+}
+
+export type PaginatedNotificationResponse = Paginated<Notification>
+
+export interface CreateNotificationPayload {
+  title: string
+  message: string
+  type: NotificationType
+  targetUserId?: string
+  targetRole?: string
+}
+
+export interface BroadcastNotificationPayload {
+  title: string
+  message: string
+  type: NotificationType
+  targetRole?: string
+}
+
+export interface UpdateNotificationPayload {
+  read?: boolean
+  title?: string
+  message?: string
+  type?: NotificationType
+}
+
+// Legacy types for socket events and admin notifications
 export type NotificationSeverity = 'info' | 'warning' | 'critical'
 
-export type NotificationType = 'report' | 'review_flag' | 'verification' | 'booking' | 'system'
+export type LegacyNotificationType = 'report' | 'review_flag' | 'verification' | 'booking' | 'system'
 
 export interface AdminNotification {
   id: string
-  type: NotificationType
+  type: LegacyNotificationType
   title: string
   message: string
   severity: NotificationSeverity
