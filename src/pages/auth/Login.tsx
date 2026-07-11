@@ -10,11 +10,8 @@ import { EmailInput } from '@/components/forms/EmailInput'
 import { PasswordInput } from '@/components/forms/PasswordInput'
 import { APP_ROUTES } from '@/config/routes'
 import { useAuth } from '@/hooks/useAuth'
-import { useAuthStore } from '@/store/auth.store'
 import type { AxiosError } from 'axios'
 import type { ApiErrorResponse } from '@/types/api.types'
-import { ROLES } from '@/constants/roles'
-import { PERMISSIONS } from '@/constants/permissions'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -28,7 +25,6 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function Login() {
   const { login } = useAuth()
-  const { setAuth } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -57,20 +53,6 @@ export default function Login() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleDummyLogin = () => {
-    const dummyAdmin = {
-      id: 'dummy-admin-1',
-      email: 'admin@skillbridge.com',
-      firstName: 'Admin',
-      lastName: 'User',
-      avatar: null,
-      roles: [ROLES.SUPER_ADMIN],
-      permissions: Object.values(PERMISSIONS),
-    }
-    setAuth('dummy-token-12345', dummyAdmin)
-    toast.success('Dummy login successful!')
   }
 
   return (
@@ -120,15 +102,6 @@ export default function Login() {
         isLoading={isLoading || isSubmitting}
       >
         Sign in
-      </Button>
-
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={handleDummyLogin}
-      >
-        Dummy Login (Dev Only)
       </Button>
     </form>
   )

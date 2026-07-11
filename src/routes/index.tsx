@@ -7,7 +7,6 @@ import {
 import { APP_ROUTES, DASHBOARD_ROUTES } from '@/config/routes'
 import { Loader } from '@/components/common/Loader'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
-import { GuestRoute } from '@/routes/GuestRoute'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 
@@ -47,11 +46,7 @@ const router = createBrowserRouter([
     element: <Navigate to={APP_ROUTES.LOGIN} replace />,
   },
   {
-    element: (
-      <GuestRoute>
-        <AuthLayout />
-      </GuestRoute>
-    ),
+    element: <AuthLayout />,
     children: [
       {
         path: APP_ROUTES.LOGIN,
