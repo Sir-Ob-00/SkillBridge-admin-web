@@ -12,20 +12,11 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Pagination } from '@/components/common/Pagination'
 import { BookingDetailsDrawer } from '@/components/bookings/BookingDetailsDrawer'
-import { BookingStatistics } from '@/components/bookings/BookingStatistics'
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge'
-import {
-  getBookings,
-  getBookingById,
-  cancelBooking,
-  completeBooking,
-  disputeBooking,
-  getBookingStatistics,
-  exportBookings,
-} from '@/services/bookings.service'
+import { getBookings, getBookingById, getBookingStatistics } from '@/services/bookings.service'
 import type { Booking, BookingFilters, BookingStatus } from '@/types/booking.types'
 import { format } from 'date-fns'
-import { Search, MoreVertical, Eye, Download, RefreshCw } from 'lucide-react'
+import { Search, MoreVertical, Eye, RefreshCw, CalendarDays, TrendingUp } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,40 +25,54 @@ import {
 } from '@/components/ui/dropdown-menu'
 import toast from 'react-hot-toast'
 
-const getInitials = (firstName: string, lastName: string) => {
-  return `${firstName[0]}${lastName[0]}`.toUpperCase()
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
-export default function Bookings() {
+const STATUS_FILTERS: (BookingStatus | undefined)[] = [
+  undefined,
+  'pending',
+  'accepted',
+  'in_progress',
+  'completed',
+  'cancelled',
+  'rejected',
+]
+
+const STATUS_LABELS: Record<string, string> = {
+  undefined: 'All',
+  pending: 'Pending',
+  accepted: 'Accepted',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  rejected: 'Rejected',
+}
+
+export function BookingsPageContent() {
   const queryClient = useQueryClient()
   const [filters, setFilters] = useState<BookingFilters>({
     page: 1,
     limit: 10,
     search: '',
     status: undefined,
-    categoryId: undefined,
-    sortBy: 'newest',
   })
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const debouncedSearch = useMemo(
-    () =>
-      debounce((value: string) => {
-        setFilters((prev) => ({ ...prev, search: value, page: 1 }))
-      }, 400),
+    () => debounce((value: string) => setFilters((prev) => ({ ...prev, search: value, page: 1 })), 400),
     [],
   )
 
-  const {
-    data: bookingsData,
-    isLoading: isLoadingBookings,
-    error: bookingsError,
-    refetch: refetchBookings,
-  } = useQuery({
-    queryKey: ['bookings', filters],
-    queryFn: () => getBookings(filters),
-  })
+  const { data: bookingsData, isLoading: isLoadingBookings, error: bookingsError, refetch: refetchBookings } =
+    useQuery({ queryKey: ['bookings', filters], queryFn: () => getBookings(filters) })
 
   const { data: statistics, isLoading: isLoadingStats } = useQuery({
     queryKey: ['booking-statistics'],
@@ -80,126 +85,46 @@ export default function Bookings() {
     enabled: !!selectedBooking && isDrawerOpen,
   })
 
-  const cancelMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) => cancelBooking(id, { reason }),
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: BookingStatus }) =>
+      status === 'completed'
+        ? (await import('@/services/bookings.service')).completeBooking(id)
+        : (await import('@/services/bookings.service')).cancelBooking(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] })
       queryClient.invalidateQueries({ queryKey: ['booking-statistics'] })
-      toast.success('Booking cancelled successfully')
+      toast.success('Booking updated successfully')
     },
-    onError: () => {
-      toast.error('Failed to cancel booking')
-    },
+    onError: () => toast.error('Failed to update booking'),
   })
 
-  const completeMutation = useMutation({
-    mutationFn: ({ id, note }: { id: string; note?: string }) => completeBooking(id, { note }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] })
-      queryClient.invalidateQueries({ queryKey: ['booking-statistics'] })
-      toast.success('Booking completed successfully')
-    },
-    onError: () => {
-      toast.error('Failed to complete booking')
-    },
-  })
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => debouncedSearch(e.target.value)
 
-  const disputeBookingMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
-      disputeBooking(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] })
-      queryClient.invalidateQueries({ queryKey: ['booking-statistics'] })
-      toast.success('Dispute resolved successfully')
-    },
-    onError: () => {
-      toast.error('Failed to resolve dispute')
-    },
-  })
-
-  const exportMutation = useMutation({
-    mutationFn: () => exportBookings(filters),
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `bookings-export-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      toast.success('Bookings exported successfully')
-    },
-    onError: () => {
-      toast.error('Failed to export bookings')
-    },
-  })
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    debouncedSearch(value)
-  }
-
-  const handleStatusFilterChange = (status: BookingStatus | undefined) => {
+  const handleStatusFilterChange = (status: BookingStatus | undefined) =>
     setFilters((prev) => ({ ...prev, status, page: 1 }))
-  }
 
-  const handleSortChange = (sortBy: 'newest' | 'oldest' | 'booking_date' | 'scheduled_date' | 'status' | 'amount') => {
-    setFilters((prev) => ({ ...prev, sortBy, page: 1 }))
-  }
-
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }))
-  }
+  const handlePageChange = (page: number) => setFilters((prev) => ({ ...prev, page }))
 
   const handleViewDetails = (booking: Booking) => {
     setSelectedBooking(booking)
     setIsDrawerOpen(true)
   }
 
-  const handleCancel = async (id: string, reason?: string) => {
-    await cancelMutation.mutateAsync({ id, reason })
-    if (selectedBooking?.id === id) {
-      setIsDrawerOpen(false)
-      setSelectedBooking(null)
-    }
+  const handleStatusChange = async (id: string, status: BookingStatus) => {
+    await statusMutation.mutateAsync({ id, status })
+    setIsDrawerOpen(false)
+    setSelectedBooking(null)
   }
 
-  const handleComplete = async (id: string, note?: string) => {
-    await completeMutation.mutateAsync({ id, note })
-    if (selectedBooking?.id === id) {
-      setIsDrawerOpen(false)
-      setSelectedBooking(null)
-    }
-  }
+  const handleResetFilters = () => setFilters({ page: 1, limit: 10, search: '', status: undefined })
 
-  const handleResolveDispute = async (id: string, payload: any) => {
-    await disputeBookingMutation.mutateAsync({ id, payload })
-    if (selectedBooking?.id === id) {
-      setIsDrawerOpen(false)
-      setSelectedBooking(null)
-    }
-  }
-
-  const handleExport = () => {
-    exportMutation.mutate()
-  }
-
-  const handleRefresh = () => {
-    refetchBookings()
-  }
-
-  const handleResetFilters = () => {
-    setFilters({ page: 1, limit: 10, search: '', status: undefined, categoryId: undefined, sortBy: 'newest' })
-  }
+  const bookings = bookingsData?.items ?? []
+  const hasFilters = Boolean(filters.search || filters.status)
 
   if (bookingsError) {
     return (
       <PageContainer>
-        <PageHeader
-          title="Bookings"
-          description="Monitor and manage every booking across the SkillBridge platform."
-        />
+        <PageHeader title="Bookings" description="Monitor and manage every booking across the SkillBridge platform." />
         <ErrorState
           title="Failed to load bookings"
           description="There was an error fetching the bookings. Please try again."
@@ -215,132 +140,58 @@ export default function Bookings() {
         title="Bookings"
         description="Monitor and manage every booking across the SkillBridge platform."
         actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              disabled={exportMutation.isPending}
-            >
-              <Download className="size-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isLoadingBookings}
-            >
-              <RefreshCw className={`size-4 mr-2 ${isLoadingBookings ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => refetchBookings()} disabled={isLoadingBookings}>
+            <RefreshCw className={`size-4 mr-2 ${isLoadingBookings ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         }
       />
 
-      {/* Statistics Cards */}
-      {isLoadingStats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-      ) : statistics ? (
-        <div className="mb-6">
-          <BookingStatistics statistics={statistics} />
-        </div>
-      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+        {isLoadingStats ? (
+          [1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)
+        ) : statistics ? (
+          <>
+            <StatCard label="Total Bookings" value={statistics.total} icon={<CalendarDays className="size-8 text-primary" />} />
+            <StatCard label="Revenue" value={`GH₵ ${statistics.revenue.toLocaleString()}`} icon={<TrendingUp className="size-8 text-success" />} />
+            <StatCard
+              label="Completed"
+              value={statistics.byStatus.completed ?? 0}
+              icon={<CalendarDays className="size-8 text-secondary" />}
+            />
+          </>
+        ) : null}
+      </div>
 
-      {/* Filter Toolbar */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by booking ID, student, artisan, phone, or email..."
+              placeholder="Search by service, student, or artisan..."
               className="pl-9"
               defaultValue={filters.search}
               onChange={handleSearchChange}
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={handleResetFilters}
-            disabled={!filters.search && !filters.status && !filters.categoryId}
-          >
+          <Button variant="outline" onClick={handleResetFilters} disabled={!hasFilters}>
             Reset
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 border-r border-border pr-2">
+          {STATUS_FILTERS.map((status) => (
             <Button
-              variant={filters.status === undefined ? 'primary' : 'outline'}
+              key={String(status)}
+              variant={filters.status === status ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => handleStatusFilterChange(undefined)}
+              onClick={() => handleStatusFilterChange(status)}
             >
-              All
+              {STATUS_LABELS[String(status)]}
             </Button>
-            <Button
-              variant={filters.status === 'pending' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('pending')}
-            >
-              Pending
-            </Button>
-            <Button
-              variant={filters.status === 'accepted' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('accepted')}
-            >
-              Accepted
-            </Button>
-            <Button
-              variant={filters.status === 'in_progress' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('in_progress')}
-            >
-              In Progress
-            </Button>
-            <Button
-              variant={filters.status === 'completed' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('completed')}
-            >
-              Completed
-            </Button>
-            <Button
-              variant={filters.status === 'cancelled' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('cancelled')}
-            >
-              Cancelled
-            </Button>
-            <Button
-              variant={filters.status === 'disputed' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('disputed')}
-            >
-              Disputed
-            </Button>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant={filters.sortBy === 'newest' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleSortChange('newest')}
-            >
-              Newest
-            </Button>
-            <Button
-              variant={filters.sortBy === 'oldest' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleSortChange('oldest')}
-            >
-              Oldest
-            </Button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Table */}
       {isLoadingBookings ? (
         <div className="space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -351,91 +202,55 @@ export default function Bookings() {
                 <Skeleton className="h-3 w-32" />
               </div>
               <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-20" />
               <Skeleton className="size-8" />
             </div>
           ))}
         </div>
-      ) : bookingsData?.data && bookingsData.data.length > 0 ? (
+      ) : bookings.length > 0 ? (
         <>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Booking ID</TableHead>
+                <TableHead>Service</TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead>Artisan</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Booking Date</TableHead>
-                <TableHead>Scheduled Date</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Scheduled</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Amount</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookingsData.data.map((booking) => (
+              {bookings.map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell>
-                    <span className="text-sm font-mono">{booking.id.slice(0, 8)}...</span>
+                    <p className="font-medium text-sm">{booking.serviceTitle}</p>
+                    <p className="text-xs text-muted-foreground">{booking.id.slice(0, 8)}</p>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarImage src={booking.studentAvatar || undefined} alt={`${booking.studentFirstName} ${booking.studentLastName}`} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials(booking.studentFirstName, booking.studentLastName)}
+                    <div className="flex items-center gap-2">
+                      <Avatar className="size-7">
+                        <AvatarImage src={booking.student.profileImageUrl || undefined} alt={booking.student.name} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                          {getInitials(booking.student.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {booking.studentFirstName} {booking.studentLastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{booking.studentEmail}</p>
-                      </div>
+                      <span className="text-sm">{booking.student.name}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarImage src={booking.artisanAvatar || undefined} alt={`${booking.artisanFirstName} ${booking.artisanLastName}`} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials(booking.artisanFirstName, booking.artisanLastName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {booking.artisanFirstName} {booking.artisanLastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{booking.artisanBusinessName || booking.artisanEmail}</p>
-                      </div>
-                    </div>
+                    <span className="text-sm">{booking.artisan.user.name}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{booking.categoryName}</span>
+                    <span className="text-sm font-medium">GH₵ {booking.price}</span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">
-                      {format(new Date(booking.createdAt), 'MMM dd, yyyy')}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">
-                      {format(new Date(booking.scheduledDate), 'MMM dd, yyyy')}
+                      {booking.scheduledTime ? format(new Date(booking.scheduledTime), 'MMM dd, yyyy') : '—'}
                     </span>
                   </TableCell>
                   <TableCell>
                     <BookingStatusBadge status={booking.status} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm capitalize">{booking.payment.status.replace('_', ' ')}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-medium">
-                      {booking.payment.currency} {booking.payment.amount.toFixed(2)}
-                    </span>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -456,28 +271,25 @@ export default function Bookings() {
               ))}
             </TableBody>
           </Table>
-          <div className="mt-4">
-            <Pagination
-              page={bookingsData.meta.page}
-              totalPages={bookingsData.meta.totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
+          {bookingsData && (
+            <div className="mt-4">
+              <Pagination page={bookingsData.page} totalPages={bookingsData.totalPages} onPageChange={handlePageChange} />
+            </div>
+          )}
         </>
       ) : (
         <EmptyState
           title="No bookings found"
           description={
-            filters.search || filters.status || filters.categoryId
+            hasFilters
               ? 'No bookings match your current filters.'
               : 'No bookings have been created yet.'
           }
-          actionLabel={filters.search || filters.status || filters.categoryId ? 'Clear Filters' : undefined}
-          onAction={filters.search || filters.status || filters.categoryId ? handleResetFilters : undefined}
+          actionLabel={hasFilters ? 'Clear Filters' : undefined}
+          onAction={hasFilters ? handleResetFilters : undefined}
         />
       )}
 
-      {/* Booking Details Drawer */}
       <BookingDetailsDrawer
         booking={bookingDetails || selectedBooking}
         isLoading={isLoadingDetails}
@@ -486,10 +298,23 @@ export default function Bookings() {
           setIsDrawerOpen(false)
           setSelectedBooking(null)
         }}
-        onCancel={handleCancel}
-        onComplete={handleComplete}
-        onResolveDispute={handleResolveDispute}
+        onStatusChange={handleStatusChange}
+        isActionLoading={statusMutation.isPending}
       />
     </PageContainer>
+  )
+}
+
+function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        {icon}
+      </div>
+    </div>
   )
 }

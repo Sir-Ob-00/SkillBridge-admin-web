@@ -22,8 +22,22 @@ export function useAuth() {
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
+      // Network / HTTP errors (e.g. 401) throw here — these are the only
+      // failures that represent bad credentials or an unreachable API.
       const response = await loginApi(credentials)
-      setAuth(response.accessToken, response.admin)
+
+      if (!response?.accessToken || !response?.user) {
+        throw new Error('Malformed login response: missing token or user')
+      }
+
+      // Persist tokens + user and flip auth state. These are local operations
+      // and must never be surfaced to the user as a credentials error.
+      try {
+        setAuth(response.accessToken, response.refreshToken ?? null, response.user)
+      } catch (stateError) {
+        console.error('Failed to persist auth state after login', stateError)
+      }
+
       navigate(APP_ROUTES.DASHBOARD)
 
       try {

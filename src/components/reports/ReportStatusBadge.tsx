@@ -3,12 +3,9 @@ import type { ReportStatus } from '@/types/report.types'
 
 export const ReportStatusBadge = createStatusBadge<ReportStatus>({
   variants: {
-    resolved: 'success',
-    dismissed: 'secondary',
-    under_investigation: 'secondary',
-    pending_response: 'secondary',
     open: 'warning',
+    escalated: 'danger',
+    resolved: 'success',
   },
   fallback: 'secondary',
-  formatLabel: (status) => status.replace('_', ' '),
 })

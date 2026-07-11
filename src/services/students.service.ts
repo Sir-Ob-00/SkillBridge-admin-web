@@ -1,9 +1,10 @@
 import { API_ENDPOINTS } from '@/constants/api-endpoints'
-import type { ApiResponse } from '@/types/api.types'
+import { emptyPage, type ApiResponse } from '@/types/api.types'
 import type {
   Student,
   StudentFilters,
   PaginatedStudentResponse,
+  StudentStatistics,
   StudentDetails,
   StudentBookingSummary,
 } from '@/types/student.types'
@@ -12,25 +13,15 @@ import apiClient from '@/api/axios'
 export async function getStudents(
   params?: StudentFilters,
 ): Promise<PaginatedStudentResponse> {
-  const { data } = await apiClient.get<ApiResponse<Student[]>>(
+  const { data } = await apiClient.get<ApiResponse<PaginatedStudentResponse>>(
     API_ENDPOINTS.STUDENTS.LIST,
     { params },
   )
-  
-  // Transform response to match expected format
-  return {
-    data: data.data,
-    meta: {
-      page: params?.page || 1,
-      limit: params?.limit || 10,
-      total: data.data.length,
-      totalPages: Math.ceil(data.data.length / (params?.limit || 10)),
-    },
-  }
+  return data.data ?? emptyPage<Student>()
 }
 
-export async function getStudentStatistics(): Promise<any> {
-  const { data } = await apiClient.get<ApiResponse<any>>(
+export async function getStudentStatistics(): Promise<StudentStatistics> {
+  const { data } = await apiClient.get<ApiResponse<StudentStatistics>>(
     API_ENDPOINTS.STUDENTS.STATISTICS,
   )
   return data.data

@@ -1,19 +1,17 @@
-export type StudentStatus = 'active' | 'suspended' | 'deleted'
+import type { Paginated } from '@/types/api.types'
+
+export type StudentStatus = 'active' | 'suspended'
 
 export interface Student {
   id: string
-  firstName: string
-  lastName: string
+  name: string
   email: string
-  phone?: string
-  avatar?: string | null
-  status: StudentStatus
-  joinedAt: string
-  totalBookings: number
-  completedBookings: number
-  cancelledBookings: number
-  lastActiveAt?: string
-  location?: string
+  role: string
+  phone?: string | null
+  profileImageUrl?: string | null
+  isSuspended: boolean
+  createdAt: string
+  updatedAt?: string
 }
 
 export interface StudentFilters {
@@ -23,14 +21,11 @@ export interface StudentFilters {
   limit?: number
 }
 
-export interface PaginatedStudentResponse {
-  data: Student[]
-  meta: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+// GET /admin/students/statistics
+export interface StudentStatistics {
+  total: number
+  active: number
+  suspended: number
 }
 
 export interface StudentBookingSummary {
@@ -43,5 +38,18 @@ export interface StudentBookingSummary {
 }
 
 export interface StudentDetails extends Student {
-  bookings: StudentBookingSummary[]
+  bookings?: StudentBookingSummary[]
+  totalBookings?: number
+  completedBookings?: number
+  cancelledBookings?: number
+  location?: string | null
+}
+
+export type PaginatedStudentResponse = Paginated<Student>
+
+/** Derives the display status from the backend `isSuspended` flag. */
+export function studentStatus(student: {
+  isSuspended?: boolean
+}): StudentStatus {
+  return student.isSuspended ? 'suspended' : 'active'
 }

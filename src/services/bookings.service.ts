@@ -1,34 +1,21 @@
 import { API_ENDPOINTS } from '@/constants/api-endpoints'
-import type { ApiResponse } from '@/types/api.types'
+import { emptyPage, type ApiResponse } from '@/types/api.types'
 import type {
   Booking,
   BookingFilters,
   PaginatedBookingResponse,
-  BookingTimeline,
   BookingStatistics,
-  UpdateBookingStatusPayload,
-  CancelBookingPayload,
-  CompleteBookingPayload,
 } from '@/types/booking.types'
 import apiClient from '@/api/axios'
 
 export async function getBookings(
   params?: BookingFilters,
 ): Promise<PaginatedBookingResponse> {
-  const { data } = await apiClient.get<ApiResponse<Booking[]>>(
+  const { data } = await apiClient.get<ApiResponse<PaginatedBookingResponse>>(
     API_ENDPOINTS.BOOKINGS.LIST,
     { params },
   )
-  
-  return {
-    data: data.data,
-    meta: {
-      page: params?.page || 1,
-      limit: params?.limit || 10,
-      total: data.data.length,
-      totalPages: Math.ceil(data.data.length / (params?.limit || 10)),
-    },
-  }
+  return data.data ?? emptyPage<Booking>()
 }
 
 export async function getBookingById(id: string): Promise<Booking> {
@@ -40,7 +27,7 @@ export async function getBookingById(id: string): Promise<Booking> {
 
 export async function updateBookingStatus(
   id: string,
-  payload: UpdateBookingStatusPayload,
+  payload: { status: string; note?: string },
 ): Promise<Booking> {
   const { data } = await apiClient.patch<ApiResponse<Booking>>(
     API_ENDPOINTS.BOOKINGS.UPDATE_STATUS(id),
@@ -51,7 +38,7 @@ export async function updateBookingStatus(
 
 export async function cancelBooking(
   id: string,
-  payload?: CancelBookingPayload,
+  payload?: { reason?: string; note?: string },
 ): Promise<Booking> {
   const { data } = await apiClient.patch<ApiResponse<Booking>>(
     API_ENDPOINTS.BOOKINGS.CANCEL(id),
@@ -62,31 +49,11 @@ export async function cancelBooking(
 
 export async function completeBooking(
   id: string,
-  payload?: CompleteBookingPayload,
+  payload?: { finalCost?: number; note?: string },
 ): Promise<Booking> {
   const { data } = await apiClient.patch<ApiResponse<Booking>>(
     API_ENDPOINTS.BOOKINGS.COMPLETE(id),
     payload,
-  )
-  return data.data
-}
-
-export async function disputeBooking(
-  id: string,
-  payload?: any,
-): Promise<Booking> {
-  const { data } = await apiClient.patch<ApiResponse<Booking>>(
-    API_ENDPOINTS.BOOKINGS.DISPUTE(id),
-    payload,
-  )
-  return data.data
-}
-
-export async function getBookingTimeline(
-  id: string,
-): Promise<BookingTimeline[]> {
-  const { data } = await apiClient.get<ApiResponse<BookingTimeline[]>>(
-    API_ENDPOINTS.BOOKINGS.TIMELINE(id),
   )
   return data.data
 }
@@ -96,17 +63,4 @@ export async function getBookingStatistics(): Promise<BookingStatistics> {
     API_ENDPOINTS.BOOKINGS.STATISTICS,
   )
   return data.data
-}
-
-export async function exportBookings(
-  params?: BookingFilters,
-): Promise<Blob> {
-  const { data } = await apiClient.get<Blob>(
-    API_ENDPOINTS.BOOKINGS.EXPORT,
-    {
-      params,
-      responseType: 'blob',
-    },
-  )
-  return data
 }

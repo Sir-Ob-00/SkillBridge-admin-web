@@ -12,21 +12,18 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { Pagination } from '@/components/common/Pagination'
 import { ReportDetailsDrawer } from '@/components/reports/ReportDetailsDrawer'
-import { ReportStatistics } from '@/components/reports/ReportStatistics'
-import { Badge } from '@/components/ui/badge'
+import { ReportStatusBadge } from '@/components/reports/ReportStatusBadge'
 import {
   getReports,
   getReportById,
   assignReport,
   resolveReport,
   dismissReport,
-  addReportNote,
   getReportStatistics,
-  exportReports,
 } from '@/services/reports.service'
-import type { Report, ReportFilters, ReportStatus, ReportPriority } from '@/types/report.types'
+import type { Report, ReportFilters, ReportStatus } from '@/types/report.types'
 import { format } from 'date-fns'
-import { Search, MoreVertical, Eye, Download, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Search, MoreVertical, Eye, RefreshCw, Flag, CheckCircle } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,44 +32,42 @@ import {
 } from '@/components/ui/dropdown-menu'
 import toast from 'react-hot-toast'
 
-const getInitials = (firstName: string, lastName: string) => {
-  return `${firstName[0]}${lastName[0]}`.toUpperCase()
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
-export default function Reports() {
+const STATUS_FILTERS: (ReportStatus | undefined)[] = [undefined, 'open', 'escalated', 'resolved']
+const STATUS_LABELS: Record<string, string> = {
+  undefined: 'All',
+  open: 'Open',
+  escalated: 'Escalated',
+  resolved: 'Resolved',
+}
+
+export function ReportsPageContent() {
   const queryClient = useQueryClient()
   const [filters, setFilters] = useState<ReportFilters>({
     page: 1,
     limit: 10,
     search: '',
     status: undefined,
-    priority: undefined,
-    category: undefined,
-    reporterType: undefined,
-    entityType: undefined,
-    assignedAdmin: undefined,
-    sortBy: 'newest',
   })
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const debouncedSearch = useMemo(
-    () =>
-      debounce((value: string) => {
-        setFilters((prev) => ({ ...prev, search: value, page: 1 }))
-      }, 400),
+    () => debounce((value: string) => setFilters((prev) => ({ ...prev, search: value, page: 1 })), 400),
     [],
   )
 
-  const {
-    data: reportsData,
-    isLoading: isLoadingReports,
-    error: reportsError,
-    refetch: refetchReports,
-  } = useQuery({
-    queryKey: ['reports', filters],
-    queryFn: () => getReports(filters),
-  })
+  const { data: reportsData, isLoading: isLoadingReports, error: reportsError, refetch: refetchReports } =
+    useQuery({ queryKey: ['reports', filters], queryFn: () => getReports(filters) })
 
   const { data: statistics, isLoading: isLoadingStats } = useQuery({
     queryKey: ['report-statistics'],
@@ -85,138 +80,42 @@ export default function Reports() {
     enabled: !!selectedReport && isDrawerOpen,
   })
 
-  const assignMutation = useMutation({
-    mutationFn: ({ id, adminId, note }: { id: string; adminId: string; note?: string }) => assignReport(id, { adminId, note }),
+  const decisionMutation = useMutation({
+    mutationFn: async (args: { id: string; action: 'assign' | 'resolve' | 'dismiss'; adminId?: string; resolution?: string; reason?: string; internalNote?: string }) => {
+      if (args.action === 'assign') return assignReport(args.id, { adminId: args.adminId ?? '', note: args.internalNote })
+      if (args.action === 'resolve') return resolveReport(args.id, { resolution: args.resolution ?? '', internalNote: args.internalNote })
+      return dismissReport(args.id, { reason: args.reason ?? '', internalNote: args.internalNote })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] })
       queryClient.invalidateQueries({ queryKey: ['report-statistics'] })
-      toast.success('Report assigned successfully')
+      toast.success('Report updated successfully')
     },
-    onError: () => {
-      toast.error('Failed to assign report')
-    },
+    onError: () => toast.error('Failed to update report'),
   })
 
-  const resolveMutation = useMutation({
-    mutationFn: ({ id, resolution, internalNote }: { id: string; resolution: string; internalNote?: string }) => resolveReport(id, { resolution, internalNote }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] })
-      queryClient.invalidateQueries({ queryKey: ['report-statistics'] })
-      toast.success('Report resolved successfully')
-    },
-    onError: () => {
-      toast.error('Failed to resolve report')
-    },
-  })
-
-  const dismissMutation = useMutation({
-    mutationFn: ({ id, reason, internalNote }: { id: string; reason: string; internalNote?: string }) => dismissReport(id, { reason, internalNote }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] })
-      queryClient.invalidateQueries({ queryKey: ['report-statistics'] })
-      toast.success('Report dismissed successfully')
-    },
-    onError: () => {
-      toast.error('Failed to dismiss report')
-    },
-  })
-
-  const addNoteMutation = useMutation({
-    mutationFn: ({ id, content }: { id: string; content: string }) => addReportNote(id, { content, isInternal: true }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reports'] })
-      queryClient.invalidateQueries({ queryKey: ['report-details'] })
-      toast.success('Note added successfully')
-    },
-    onError: () => {
-      toast.error('Failed to add note')
-    },
-  })
-
-  const exportMutation = useMutation({
-    mutationFn: () => exportReports(filters),
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `reports-export-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      toast.success('Reports exported successfully')
-    },
-    onError: () => {
-      toast.error('Failed to export reports')
-    },
-  })
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    debouncedSearch(value)
-  }
-
-  const handleStatusFilterChange = (status: ReportStatus | undefined) => {
-    setFilters((prev) => ({ ...prev, status, page: 1 }))
-  }
-
-  const handlePriorityFilterChange = (priority: ReportPriority | undefined) => {
-    setFilters((prev) => ({ ...prev, priority, page: 1 }))
-  }
-
-  const handleSortChange = (sortBy: 'newest' | 'oldest' | 'priority' | 'status' | 'last_updated') => {
-    setFilters((prev) => ({ ...prev, sortBy, page: 1 }))
-  }
-
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page }))
-  }
-
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => debouncedSearch(e.target.value)
+  const handleStatusFilterChange = (status: ReportStatus | undefined) => setFilters((prev) => ({ ...prev, status, page: 1 }))
+  const handlePageChange = (page: number) => setFilters((prev) => ({ ...prev, page }))
   const handleViewDetails = (report: Report) => {
     setSelectedReport(report)
     setIsDrawerOpen(true)
   }
-
-  const handleAssign = async (id: string, adminId: string, note?: string) => {
-    await assignMutation.mutateAsync({ id, adminId, note })
+  const handleDecision = (id: string, action: 'assign' | 'resolve' | 'dismiss', payload?: { adminId?: string; resolution?: string; reason?: string; internalNote?: string }) => {
+    decisionMutation.mutate({ id, action, ...payload })
+    setIsDrawerOpen(false)
+    setSelectedReport(null)
   }
+  const handleResetFilters = () => setFilters({ page: 1, limit: 10, search: '', status: undefined })
 
-  const handleResolve = async (id: string, resolution: string, internalNote?: string) => {
-    await resolveMutation.mutateAsync({ id, resolution, internalNote })
-  }
-
-  const handleDismiss = async (id: string, reason: string, internalNote?: string) => {
-    await dismissMutation.mutateAsync({ id, reason, internalNote })
-  }
-
-  const handleAddNote = async (id: string, content: string) => {
-    await addNoteMutation.mutateAsync({ id, content })
-  }
-
-  const handleExport = () => {
-    exportMutation.mutate()
-  }
-
-  const handleRefresh = () => {
-    refetchReports()
-  }
-
-  const handleResetFilters = () => {
-    setFilters({ page: 1, limit: 10, search: '', status: undefined, priority: undefined, category: undefined, reporterType: undefined, entityType: undefined, assignedAdmin: undefined, sortBy: 'newest' })
-  }
+  const reports = reportsData?.items ?? []
+  const hasFilters = Boolean(filters.search || filters.status)
 
   if (reportsError) {
     return (
       <PageContainer>
-        <PageHeader
-          title="Reports"
-          description="Investigate and resolve incidents reported across the SkillBridge platform."
-        />
-        <ErrorState
-          title="Failed to load reports"
-          description="There was an error fetching the reports. Please try again."
-          onRetry={() => refetchReports()}
-        />
+        <PageHeader title="Reports" description="Investigate and resolve incidents reported across the SkillBridge platform." />
+        <ErrorState title="Failed to load reports" description="There was an error fetching the reports. Please try again." onRetry={() => refetchReports()} />
       </PageContainer>
     )
   }
@@ -227,163 +126,55 @@ export default function Reports() {
         title="Reports"
         description="Investigate and resolve incidents reported across the SkillBridge platform."
         actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              disabled={exportMutation.isPending}
-            >
-              <Download className="size-4 mr-2" />
-              Export Reports
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isLoadingReports}
-            >
-              <RefreshCw className={`size-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => refetchReports()} disabled={isLoadingReports}>
+            <RefreshCw className={`size-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         }
       />
 
-      {/* Statistics Cards */}
-      {isLoadingStats ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-      ) : statistics ? (
-        <div className="mb-6">
-          <ReportStatistics statistics={statistics} />
-        </div>
-      ) : null}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        {isLoadingStats ? (
+          [1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)
+        ) : statistics ? (
+          <>
+            <StatCard label="Total" value={statistics.total} icon={<Flag className="size-8 text-primary" />} />
+            <StatCard label="Open" value={statistics.open} icon={<Flag className="size-8 text-warning" />} />
+            <StatCard label="Escalated" value={statistics.escalated} icon={<Flag className="size-8 text-danger" />} />
+            <StatCard label="Resolved" value={statistics.resolved} icon={<CheckCircle className="size-8 text-success" />} />
+          </>
+        ) : null}
+      </div>
 
-      {/* Filter Toolbar */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by report ID, name, email, booking ID..."
+              placeholder="Search by reason, reporter, or target..."
               className="pl-9"
               defaultValue={filters.search}
               onChange={handleSearchChange}
             />
           </div>
-          <Button
-            variant="outline"
-            onClick={handleResetFilters}
-            disabled={!filters.search && !filters.status && !filters.priority && !filters.category && !filters.reporterType && !filters.entityType && !filters.assignedAdmin}
-          >
+          <Button variant="outline" onClick={handleResetFilters} disabled={!hasFilters}>
             Reset
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 border-r border-border pr-2">
+          {STATUS_FILTERS.map((status) => (
             <Button
-              variant={filters.status === undefined ? 'primary' : 'outline'}
+              key={String(status)}
+              variant={filters.status === status ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => handleStatusFilterChange(undefined)}
+              onClick={() => handleStatusFilterChange(status)}
             >
-              All
+              {STATUS_LABELS[String(status)]}
             </Button>
-            <Button
-              variant={filters.status === 'open' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('open')}
-            >
-              Open
-            </Button>
-            <Button
-              variant={filters.status === 'under_investigation' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('under_investigation')}
-            >
-              Investigation
-            </Button>
-            <Button
-              variant={filters.status === 'pending_response' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('pending_response')}
-            >
-              Pending
-            </Button>
-            <Button
-              variant={filters.status === 'resolved' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('resolved')}
-            >
-              Resolved
-            </Button>
-            <Button
-              variant={filters.status === 'dismissed' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleStatusFilterChange('dismissed')}
-            >
-              Dismissed
-            </Button>
-          </div>
-          <div className="flex items-center gap-1 border-r border-border pr-2">
-            <Button
-              variant={filters.priority === 'critical' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handlePriorityFilterChange(filters.priority === 'critical' ? undefined : 'critical')}
-            >
-              <AlertTriangle className="size-3 mr-1" />
-              Critical
-            </Button>
-            <Button
-              variant={filters.priority === 'high' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handlePriorityFilterChange(filters.priority === 'high' ? undefined : 'high')}
-            >
-              High
-            </Button>
-            <Button
-              variant={filters.priority === 'medium' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handlePriorityFilterChange(filters.priority === 'medium' ? undefined : 'medium')}
-            >
-              Medium
-            </Button>
-            <Button
-              variant={filters.priority === 'low' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handlePriorityFilterChange(filters.priority === 'low' ? undefined : 'low')}
-            >
-              Low
-            </Button>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant={filters.sortBy === 'newest' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleSortChange('newest')}
-            >
-              Newest
-            </Button>
-            <Button
-              variant={filters.sortBy === 'oldest' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleSortChange('oldest')}
-            >
-              Oldest
-            </Button>
-            <Button
-              variant={filters.sortBy === 'priority' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => handleSortChange('priority')}
-            >
-              Priority
-            </Button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Table */}
       {isLoadingReports ? (
         <div className="space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -394,86 +185,54 @@ export default function Reports() {
                 <Skeleton className="h-3 w-32" />
               </div>
               <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-20" />
               <Skeleton className="size-8" />
             </div>
           ))}
         </div>
-      ) : reportsData?.data && reportsData.data.length > 0 ? (
+      ) : reports.length > 0 ? (
         <>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Report ID</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Reporter</TableHead>
-                <TableHead>Reported Entity</TableHead>
-                <TableHead>Priority</TableHead>
+                <TableHead>Target</TableHead>
+                <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Assigned Admin</TableHead>
-                <TableHead>Created Date</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reportsData.data.map((report) => (
+              {reports.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell>
-                    <span className="text-sm font-mono">{report.id.slice(0, 8)}...</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm capitalize">{report.category.replace('_', ' ')}</span>
-                  </TableCell>
-                  <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="size-8">
-                        <AvatarImage src={report.reporter.avatar || undefined} alt={`${report.reporter.firstName} ${report.reporter.lastName}`} />
+                        <AvatarImage src={undefined} alt={report.reporter.name} />
                         <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials(report.reporter.firstName, report.reporter.lastName)}
+                          {getInitials(report.reporter.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm">
-                          {report.reporter.firstName} {report.reporter.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground capitalize">{report.reporter.type}</p>
+                        <p className="font-medium text-sm">{report.reporter.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{report.reporter.role}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarImage src={report.reportedEntity.avatar || undefined} alt={report.reportedEntity.name} />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {report.reportedEntity.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">{report.reportedEntity.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{report.reportedEntity.type}</p>
-                      </div>
+                    <div>
+                      <p className="font-medium text-sm">{report.target.name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{report.target.role}</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={report.priority === 'critical' ? 'danger' : 'outline'} className="text-xs capitalize">
-                      {report.priority}
-                    </Badge>
+                    <span className="text-sm">{report.reason}</span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {report.status.replace('_', ' ')}
-                    </Badge>
+                    <ReportStatusBadge status={report.status} />
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {report.assignedAdminName || 'Unassigned'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">
-                      {format(new Date(report.createdAt), 'MMM dd, yyyy')}
-                    </span>
+                    <span className="text-sm">{format(new Date(report.createdAt), 'MMM dd, yyyy')}</span>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -494,28 +253,21 @@ export default function Reports() {
               ))}
             </TableBody>
           </Table>
-          <div className="mt-4">
-            <Pagination
-              page={reportsData.meta.page}
-              totalPages={reportsData.meta.totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
+          {reportsData && (
+            <div className="mt-4">
+              <Pagination page={reportsData.page} totalPages={reportsData.totalPages} onPageChange={handlePageChange} />
+            </div>
+          )}
         </>
       ) : (
         <EmptyState
           title="No reports found"
-          description={
-            filters.search || filters.status || filters.priority || filters.category || filters.reporterType || filters.entityType || filters.assignedAdmin
-              ? 'No reports match your current filters.'
-              : 'No reports have been submitted yet.'
-          }
-          actionLabel={filters.search || filters.status || filters.priority || filters.category || filters.reporterType || filters.entityType || filters.assignedAdmin ? 'Clear Filters' : undefined}
-          onAction={filters.search || filters.status || filters.priority || filters.category || filters.reporterType || filters.entityType || filters.assignedAdmin ? handleResetFilters : undefined}
+          description={hasFilters ? 'No reports match your current filters.' : 'No reports have been submitted yet.'}
+          actionLabel={hasFilters ? 'Clear Filters' : undefined}
+          onAction={hasFilters ? handleResetFilters : undefined}
         />
       )}
 
-      {/* Report Details Drawer */}
       <ReportDetailsDrawer
         report={reportDetails || selectedReport}
         isLoading={isLoadingDetails}
@@ -524,15 +276,23 @@ export default function Reports() {
           setIsDrawerOpen(false)
           setSelectedReport(null)
         }}
-        onAssign={handleAssign}
-        onResolve={handleResolve}
-        onDismiss={handleDismiss}
-        onAddNote={handleAddNote}
-        availableAdmins={[
-          { id: '1', name: 'Admin User' },
-          { id: '2', name: 'Moderator User' },
-        ]}
+        onDecision={handleDecision}
+        isActionLoading={decisionMutation.isPending}
       />
     </PageContainer>
+  )
+}
+
+function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold">{value}</p>
+        </div>
+        {icon}
+      </div>
+    </div>
   )
 }

@@ -1,32 +1,39 @@
 import { API_ENDPOINTS } from '@/constants/api-endpoints'
 import type { ApiResponse } from '@/types/api.types'
-import type { DashboardResponse } from '@/types/dashboard.types'
+import type {
+  DashboardActivityLog,
+  DashboardOverview,
+  DashboardStatistics,
+} from '@/types/dashboard.types'
 import apiClient from '@/api/axios'
 
-export async function getDashboardOverview(): Promise<DashboardResponse> {
-  const { data } = await apiClient.get<ApiResponse<DashboardResponse>>(
+export async function getDashboardOverview(): Promise<DashboardOverview> {
+  const { data } = await apiClient.get<ApiResponse<DashboardOverview>>(
     API_ENDPOINTS.DASHBOARD.OVERVIEW,
   )
   return data.data
 }
 
-export async function getDashboardStats(): Promise<DashboardResponse> {
-  const { data } = await apiClient.get<ApiResponse<DashboardResponse>>(
+export async function getDashboardStats(): Promise<DashboardOverview> {
+  const { data } = await apiClient.get<ApiResponse<DashboardOverview>>(
     API_ENDPOINTS.DASHBOARD.STATS,
   )
   return data.data
 }
 
-export async function getDashboardStatistics(): Promise<DashboardResponse> {
-  const { data } = await apiClient.get<ApiResponse<DashboardResponse>>(
+export async function getDashboardStatistics(): Promise<DashboardStatistics> {
+  const { data } = await apiClient.get<ApiResponse<DashboardStatistics>>(
     API_ENDPOINTS.DASHBOARD.STATISTICS,
   )
   return data.data
 }
 
-export async function getRecentActivities(): Promise<any[]> {
-  const { data } = await apiClient.get<ApiResponse<any[]>>(
+export async function getRecentActivities(
+  limit = 15,
+): Promise<DashboardActivityLog[]> {
+  const { data } = await apiClient.get<ApiResponse<DashboardActivityLog[]>>(
     API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITIES,
+    { params: { limit } },
   )
   return data.data
 }

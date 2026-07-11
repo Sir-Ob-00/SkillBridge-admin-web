@@ -2,11 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Star } from 'lucide-react'
-import type { TopArtisan } from '@/types/dashboard.types'
+import type { TopRatedArtisan } from '@/types/dashboard.types'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface TopArtisansProps {
-  artisans: TopArtisan[]
+  artisans: TopRatedArtisan[]
   isLoading?: boolean
 }
 
@@ -78,7 +78,7 @@ export function TopArtisans({ artisans, isLoading }: TopArtisansProps) {
             const initials = getInitials(artisan.name)
 
             return (
-              <div key={artisan.id} className="flex items-center gap-4">
+              <div key={artisan.artisanId} className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage src={undefined} alt={artisan.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
@@ -93,8 +93,8 @@ export function TopArtisans({ artisans, isLoading }: TopArtisansProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">{artisan.bookings}</p>
-                  <p className="text-xs text-muted-foreground">bookings</p>
+                  <p className="font-medium">{artisan.reviewCount}</p>
+                  <p className="text-xs text-muted-foreground">reviews</p>
                 </div>
                 <Badge variant={badge.variant}>{badge.label}</Badge>
               </div>

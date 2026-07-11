@@ -1,27 +1,30 @@
 import { useState } from 'react'
 import { Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerTitle } from '@/components/ui/drawer'
 import { Separator } from '@/components/ui/separator'
-import type { ArtisanDetails } from '@/types/artisan.types'
-import {
-  ArtisanBookingsSection,
-  ArtisanContactSection,
-  ArtisanDetailsFooter,
-  ArtisanMetricsSection,
-  ArtisanPortfolioSection,
-  ArtisanProfileSection,
-  ArtisanReviewsSection,
-  ArtisanVerificationSection,
-} from './ArtisanDetailsDrawerSections'
-import { ArtisanDetailsDrawerSkeleton } from './ArtisanDetailsDrawerSkeleton'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/common/StatusBadge'
+import { format } from 'date-fns'
+import { Ban, Check, Mail, Phone, MapPin, Star, Briefcase, Image as ImageIcon, Loader2 } from 'lucide-react'
+import type { Artisan } from '@/types/artisan.types'
+import { artisanStatus, artisanStatusVariant, artisanVerificationVariant } from '@/types/artisan.types'
 
 interface ArtisanDetailsDrawerProps {
-  artisan: ArtisanDetails | null
+  artisan: Artisan | null
   isLoading?: boolean
   isOpen: boolean
   onClose: () => void
   onStatusChange: (id: string, status: 'active' | 'suspended') => void
-  onVerify: (id: string, payload: { status: 'verified' | 'rejected'; note?: string }) => void
-  onDelete: (id: string) => void
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
 export function ArtisanDetailsDrawer({
@@ -30,101 +33,188 @@ export function ArtisanDetailsDrawer({
   isOpen,
   onClose,
   onStatusChange,
-  onVerify,
-  onDelete,
 }: ArtisanDetailsDrawerProps) {
   const [isActionLoading, setIsActionLoading] = useState(false)
-  const [verifyNote, setVerifyNote] = useState('')
 
   const handleStatusToggle = async () => {
     if (!artisan) return
-
+    const status = artisanStatus(artisan) === 'active' ? 'suspended' : 'active'
     setIsActionLoading(true)
     try {
-      const newStatus = artisan.status === 'active' ? 'suspended' : 'active'
-      await onStatusChange(artisan.id, newStatus)
-    } finally {
-      setIsActionLoading(false)
-    }
-  }
-
-  const handleVerify = async (status: 'verified' | 'rejected') => {
-    if (!artisan) return
-
-    const confirmMessage =
-      status === 'verified'
-        ? 'Are you sure you want to verify this artisan? They will become visible in the marketplace.'
-        : 'Are you sure you want to reject this artisan? They will need to resubmit their verification.'
-
-    if (!confirm(confirmMessage)) return
-
-    setIsActionLoading(true)
-    try {
-      await onVerify(artisan.id, { status, note: verifyNote || undefined })
-      setVerifyNote('')
-    } finally {
-      setIsActionLoading(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!artisan) return
-
-    if (!confirm('Are you sure you want to delete this artisan? This action cannot be undone.')) {
-      return
-    }
-
-    setIsActionLoading(true)
-    try {
-      await onDelete(artisan.id)
-      onClose()
+      await onStatusChange(artisan.id, status)
     } finally {
       setIsActionLoading(false)
     }
   }
 
   if (isLoading) {
-    return <ArtisanDetailsDrawerSkeleton isOpen={isOpen} onClose={onClose} />
+    return (
+      <Drawer>
+        <DrawerOverlay open={isOpen} onClose={onClose} />
+        <DrawerContent open={isOpen}>
+          <DrawerHeader>
+            <DrawerTitle>Artisan Details</DrawerTitle>
+          </DrawerHeader>
+          <DrawerBody className="flex items-center justify-center py-12">
+            <Loader2 className="size-8 animate-spin text-muted-foreground" />
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    )
   }
 
   if (!artisan) return null
 
+  const status = artisanStatus(artisan)
+
   return (
     <Drawer>
       <DrawerOverlay open={isOpen} onClose={onClose} />
-      <DrawerContent open={isOpen}>
+      <DrawerContent open={isOpen} className="max-w-2xl">
         <DrawerHeader>
           <DrawerTitle>Artisan Details</DrawerTitle>
         </DrawerHeader>
 
         <DrawerBody className="space-y-6">
-          <ArtisanProfileSection artisan={artisan} />
+          {/* Profile */}
+          <div className="flex items-start gap-4">
+            <Avatar className="size-16">
+              <AvatarImage src={artisan.user.profileImageUrl || undefined} alt={artisan.user.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                {getInitials(artisan.user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold">{artisan.businessName || artisan.user.name}</h3>
+              <p className="text-sm text-muted-foreground">{artisan.user.name}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <StatusBadge status={artisan.verification} variant={artisanVerificationVariant(artisan.verification)} />
+                <StatusBadge status={status} variant={artisanStatusVariant(status)} />
+              </div>
+            </div>
+          </div>
 
           <Separator />
 
-          <ArtisanContactSection artisan={artisan} />
+          {/* Contact */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-center gap-3">
+              <Mail className="size-4 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm font-medium">{artisan.user.email}</p>
+              </div>
+            </div>
+            {artisan.user.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="size-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium">{artisan.user.phone}</p>
+                </div>
+              </div>
+            )}
+            {artisan.location && (
+              <div className="flex items-center gap-3">
+                <MapPin className="size-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Location</p>
+                  <p className="text-sm font-medium">{artisan.location}</p>
+                </div>
+              </div>
+            )}
+            {artisan.pricingFrom && (
+              <div className="flex items-center gap-3">
+                <Briefcase className="size-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Pricing From</p>
+                  <p className="text-sm font-medium">GH₵ {artisan.pricingFrom}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {artisan.bio && (
+            <p className="text-sm text-muted-foreground">{artisan.bio}</p>
+          )}
 
           <Separator />
 
-          <ArtisanVerificationSection artisan={artisan} isActionLoading={isActionLoading} onVerify={handleVerify} />
+          {/* Metrics */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="text-center">
+              <p className="text-2xl font-bold flex items-center justify-center gap-1">
+                <Star className="size-5 fill-yellow-400 text-yellow-400" />
+                {artisan.rating ? Number(artisan.rating).toFixed(1) : '—'}
+              </p>
+              <p className="text-xs text-muted-foreground">Rating</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{artisan.reviewCount ?? 0}</p>
+              <p className="text-xs text-muted-foreground">Reviews</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{format(new Date(artisan.createdAt), 'MMM yyyy')}</p>
+              <p className="text-xs text-muted-foreground">Joined</p>
+            </div>
+          </div>
 
-          <ArtisanMetricsSection artisan={artisan} />
+          {/* Portfolio */}
+          {artisan.portfolio && artisan.portfolio.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <ImageIcon className="size-4" />
+                  Portfolio
+                </h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {artisan.portfolio.map((item) => (
+                    <img
+                      key={item.id}
+                      src={item.imageUrl}
+                      alt={item.caption || 'Portfolio'}
+                      className="aspect-square w-full object-cover rounded-lg border border-border"
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
-          <ArtisanPortfolioSection artisan={artisan} />
-
-          <ArtisanReviewsSection artisan={artisan} />
-
-          <ArtisanBookingsSection artisan={artisan} />
+          {/* Application status */}
+          <Separator />
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Application Status</span>
+            <span className="font-medium">{artisan.applicationStatus}</span>
+          </div>
+          {artisan.rejectionReason && (
+            <div className="text-xs text-danger">Rejection reason: {artisan.rejectionReason}</div>
+          )}
         </DrawerBody>
 
         <DrawerFooter className="flex-col gap-3">
-          <ArtisanDetailsFooter
-            artisan={artisan}
-            isActionLoading={isActionLoading}
-            onStatusToggle={handleStatusToggle}
-            onDelete={handleDelete}
-            onClose={onClose}
-          />
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleStatusToggle}
+            disabled={isActionLoading}
+          >
+            {status === 'active' ? (
+              <>
+                <Ban className="mr-2 size-4" />
+                Suspend Artisan
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 size-4" />
+                Activate Artisan
+              </>
+            )}
+          </Button>
+          <Button variant="ghost" onClick={onClose} className="w-full">
+            Close
+          </Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

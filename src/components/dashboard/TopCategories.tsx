@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { TopCategory } from '@/types/dashboard.types'
+import type { CategoryUsage } from '@/types/dashboard.types'
 
 interface TopCategoriesProps {
-  categories: TopCategory[]
+  categories: CategoryUsage[]
   isLoading?: boolean
 }
 

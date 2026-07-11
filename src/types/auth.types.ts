@@ -1,14 +1,13 @@
-import type { Role } from '@/constants/roles'
-import type { Permission } from '@/constants/permissions'
+export type AdminRole = 'student' | 'artisan' | 'admin' | 'super_admin'
 
 export interface Admin {
   id: string
+  name: string
   email: string
-  firstName: string
-  lastName: string
-  avatar?: string | null
-  roles: Role[]
-  permissions: Permission[]
+  role: AdminRole
+  phone?: string | null
+  profileImageUrl?: string | null
+  isSuspended?: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -20,7 +19,8 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   accessToken: string
-  admin: Admin
+  refreshToken: string
+  user: Admin
 }
 
 export interface ForgotPasswordPayload {

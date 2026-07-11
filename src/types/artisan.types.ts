@@ -1,93 +1,123 @@
-export type ArtisanStatus = 'active' | 'suspended' | 'pending' | 'rejected'
+import type { Paginated } from '@/types/api.types'
 
-export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
+export type VerificationStatus = 'unverified' | 'verified' | 'rejected'
 
-export interface Artisan {
+export interface ArtisanUser {
   id: string
-  firstName: string
-  lastName: string
-  businessName: string
+  name: string
   email: string
-  phone?: string
-  avatar?: string | null
-  category: string
-  location?: string
-  status: ArtisanStatus
-  verificationStatus: VerificationStatus
-  joinedAt: string
-  rating: number
-  totalReviews: number
-  totalBookings: number
-  completedBookings: number
-  cancelledBookings: number
-  lastActiveAt?: string
-}
-
-export interface ArtisanFilters {
-  search?: string
-  status?: ArtisanStatus
-  verificationStatus?: VerificationStatus
-  category?: string
-  page?: number
-  limit?: number
-}
-
-export interface PaginatedArtisanResponse {
-  data: Artisan[]
-  meta: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+  phone?: string | null
+  profileImageUrl?: string | null
+  isSuspended: boolean
 }
 
 export interface ArtisanPortfolioItem {
   id: string
-  title: string
-  description: string
   imageUrl: string
-  videoUrl?: string
+  caption?: string | null
   createdAt: string
 }
 
-export interface ArtisanReview {
+export interface ArtisanSkill {
+  skill: { id: string; name: string }
+}
+
+export interface ArtisanCategoryRef {
+  category: { id: string; name: string }
+}
+
+export interface ArtisanService {
   id: string
-  studentName: string
-  studentAvatar?: string
-  rating: number
-  comment: string
+  title: string
+  description?: string | null
+  price: string
+  durationMinutes?: number
+  categoryId?: string
+  isActive?: boolean
   createdAt: string
+  updatedAt: string
+  category?: { id: string; name: string }
 }
 
-export interface ArtisanBookingSummary {
+export interface ArtisanAvailability {
   id: string
-  serviceName: string
-  studentName: string
-  status: string
-  scheduledDate: string
-  amount: number
+  day: string
+  startTime: string
+  endTime: string
 }
 
-export interface ArtisanDocument {
+export interface Artisan {
   id: string
-  type: string
-  name: string
-  url: string
-  status: 'pending' | 'approved' | 'rejected'
-  submittedAt: string
-  reviewedAt?: string
-  reviewNote?: string
+  userId: string
+  businessName: string | null
+  bio?: string | null
+  pricingFrom?: string | null
+  location?: string | null
+  rating?: string | null
+  reviewCount?: number
+  applicationStatus: string
+  isSuspended: boolean
+  rejectionReason?: string | null
+  reviewNotes?: string | null
+  reviewedByAdminId?: string | null
+  reviewedAt?: string | null
+  submittedAt?: string | null
+  createdAt: string
+  updatedAt: string
+  verification: VerificationStatus | string
+  user: ArtisanUser
+  portfolio?: ArtisanPortfolioItem[]
+  skills?: ArtisanSkill[]
+  categories?: ArtisanCategoryRef[]
+  services?: ArtisanService[]
+  availability?: ArtisanAvailability[]
+  verificationDoc?: unknown | null
 }
 
-export interface ArtisanDetails extends Artisan {
-  portfolio: ArtisanPortfolioItem[]
-  reviews: ArtisanReview[]
-  bookings: ArtisanBookingSummary[]
-  documents: ArtisanDocument[]
+export type ArtisanStatus = 'active' | 'suspended'
+
+export interface ArtisanFilters {
+  search?: string
+  verification?: VerificationStatus
+  suspended?: boolean
+  page?: number
+  limit?: number
 }
 
-export interface VerifyArtisanPayload {
-  status: 'verified' | 'rejected'
-  note?: string
+export interface ArtisanStatistics {
+  total: number
+  active: number
+  pending: number
+  rejected: number
+  suspended: number
+}
+
+export type PaginatedArtisanResponse = Paginated<Artisan>
+
+export interface ArtisanDetails extends Artisan {}
+
+/** Derives the display status from the backend `isSuspended` flag. */
+export function artisanStatus(artisan: { isSuspended?: boolean }): ArtisanStatus {
+  return artisan.isSuspended ? 'suspended' : 'active'
+}
+
+export function artisanVerificationVariant(
+  status: string,
+): 'success' | 'warning' | 'danger' | 'secondary' {
+  switch (status) {
+    case 'verified':
+      return 'success'
+    case 'rejected':
+      return 'danger'
+    case 'unverified':
+      return 'secondary'
+    default:
+      return 'secondary'
+  }
+}
+
+export function artisanStatusVariant(
+  status: ArtisanStatus,
+): 'success' | 'warning' {
+  return status === 'active' ? 'success' : 'warning'
 }

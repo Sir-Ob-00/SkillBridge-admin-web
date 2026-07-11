@@ -4,13 +4,20 @@ import type { Permission } from '@/constants/permissions'
 import type { Role } from '@/constants/roles'
 import type { Admin } from '@/types/auth.types'
 
+// The backend models each account with a single `role` string and no explicit
+// permissions list, so we derive the RBAC arrays the app expects from it.
+function rolesFromAdmin(admin: Admin | null): Role[] {
+  return admin?.role ? ([admin.role] as Role[]) : []
+}
+
 interface AuthState {
   accessToken: string | null
+  refreshToken: string | null
   admin: Admin | null
   permissions: Permission[]
   roles: Role[]
   isAuthenticated: boolean
-  setAuth: (token: string, admin: Admin) => void
+  setAuth: (accessToken: string, refreshToken: string | null, admin: Admin) => void
   setAdmin: (admin: Admin) => void
   logout: () => void
   hasPermission: (permission: Permission) => boolean
@@ -19,6 +26,7 @@ interface AuthState {
 
 const initialState = {
   accessToken: null as string | null,
+  refreshToken: null as string | null,
   admin: null as Admin | null,
   permissions: [] as Permission[],
   roles: [] as Role[],
@@ -30,12 +38,13 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       ...initialState,
 
-      setAuth: (token, admin) => {
+      setAuth: (accessToken, refreshToken, admin) => {
         set({
-          accessToken: token,
-          admin,
-          permissions: admin.permissions ?? [],
-          roles: admin.roles ?? [],
+          accessToken,
+          refreshToken,
+          admin: admin ?? null,
+          permissions: [],
+          roles: rolesFromAdmin(admin),
           isAuthenticated: true,
         })
       },
@@ -43,8 +52,8 @@ export const useAuthStore = create<AuthState>()(
       setAdmin: (admin) => {
         set({
           admin,
-          permissions: admin.permissions ?? [],
-          roles: admin.roles ?? [],
+          permissions: [],
+          roles: rolesFromAdmin(admin),
         })
       },
 
@@ -64,6 +73,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'skillbridge-auth',
       partialize: (state) => ({
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         admin: state.admin,
         permissions: state.permissions,
         roles: state.roles,

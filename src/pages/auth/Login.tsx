@@ -46,10 +46,20 @@ export default function Login() {
       toast.success('Welcome back!')
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>
-      const message =
-        axiosError.response?.data?.message ??
-        'Invalid credentials. Please try again.'
-      toast.error(message)
+      const status = axiosError.response?.status
+      const apiMessage = axiosError.response?.data?.message
+
+      if (status === 401) {
+        // Only a genuine auth rejection means bad credentials.
+        toast.error(apiMessage ?? 'Incorrect credentials. Please try again.')
+      } else if (status) {
+        // Other HTTP errors: surface the server message if present.
+        toast.error(apiMessage ?? 'Something went wrong. Please try again.')
+      } else {
+        // No HTTP status = network/CORS failure or a post-login processing
+        // error. Never blame the user's credentials for these.
+        toast.error('Unable to sign in right now. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }

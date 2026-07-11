@@ -3,24 +3,16 @@ import { useQuery } from '@tanstack/react-query'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/feedback/PageHeader'
 import { ErrorState } from '@/components/common/ErrorState'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { AnalyticsKpiCards } from '@/components/analytics/AnalyticsKpiCards'
-import { UserGrowthChart } from '@/components/analytics/UserGrowthChart'
-import { BookingTrendChart } from '@/components/analytics/BookingTrendChart'
-import { RevenueChart } from '@/components/analytics/RevenueChart'
-import { CategoryPieChart } from '@/components/analytics/CategoryPieChart'
 import { TopArtisansTable } from '@/components/analytics/TopArtisansTable'
-import {
-  getOverview,
-  getUserAnalytics,
-  getBookingAnalytics,
-  getRevenueAnalytics,
-  getCategoryAnalytics,
-} from '@/services/analytics.service'
+import { getAnalyticsOverview } from '@/services/analytics.service'
 import type { DateRange } from '@/types/analytics.types'
 import { RefreshCw } from 'lucide-react'
 
-export default function Analytics() {
+export function AnalyticsPage() {
   const [dateRange, setDateRange] = useState<DateRange>('30d')
 
   const getAnalyticsParams = (range: DateRange) => {
@@ -31,50 +23,19 @@ export default function Analytics() {
 
   const params = getAnalyticsParams(dateRange)
 
-  const { data: overview, isLoading: isLoadingOverview, error: overviewError, refetch: refetchOverview } = useQuery({
+  const { data: overview, isLoading, error, refetch } = useQuery({
     queryKey: ['analytics-overview', dateRange],
-    queryFn: () => getOverview(params),
+    queryFn: () => getAnalyticsOverview(params),
   })
 
-  const { data: userAnalytics, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['analytics-users', dateRange],
-    queryFn: () => getUserAnalytics(params),
-  })
-
-  const { data: bookingAnalytics, isLoading: isLoadingBookings } = useQuery({
-    queryKey: ['analytics-bookings', dateRange],
-    queryFn: () => getBookingAnalytics(params),
-  })
-
-  const { data: revenueAnalytics, isLoading: isLoadingRevenue } = useQuery({
-    queryKey: ['analytics-revenue', dateRange],
-    queryFn: () => getRevenueAnalytics(params),
-  })
-
-  const { data: categoryAnalytics, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ['analytics-categories', dateRange],
-    queryFn: () => getCategoryAnalytics(params),
-  })
-
-  const handleDateRangeChange = (newRange: DateRange) => {
-    setDateRange(newRange)
-  }
-
-  const handleRefresh = () => {
-    refetchOverview()
-  }
-
-  if (overviewError) {
+  if (error) {
     return (
       <PageContainer>
-        <PageHeader
-          title="Analytics"
-          description="Platform performance insights and trends."
-        />
+        <PageHeader title="Analytics" description="Platform performance insights and trends." />
         <ErrorState
           title="Failed to load analytics"
           description="There was an error fetching the analytics data. Please try again."
-          onRetry={handleRefresh}
+          onRetry={() => refetch()}
         />
       </PageContainer>
     )
@@ -97,19 +58,15 @@ export default function Analytics() {
                   key={option.value}
                   variant={dateRange === option.value ? 'primary' : 'ghost'}
                   size="sm"
-                  onClick={() => handleDateRangeChange(option.value)}
+                  onClick={() => setDateRange(option.value)}
                   className="rounded-none first:rounded-l-lg last:rounded-r-lg"
                 >
                   {option.label}
                 </Button>
               ))}
             </div>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isLoadingOverview}
-            >
-              <RefreshCw className={`size-4 mr-2 ${isLoadingOverview ? 'animate-spin' : ''}`} />
+            <Button variant="outline" onClick={() => refetch()} disabled={isLoading}>
+              <RefreshCw className={`size-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -118,24 +75,70 @@ export default function Analytics() {
 
       {/* KPI Cards */}
       <div className="mb-6">
-        <AnalyticsKpiCards metrics={overview || null} isLoading={isLoadingOverview} />
+        <AnalyticsKpiCards metrics={overview ?? null} isLoading={isLoading} />
       </div>
 
-      {/* Charts Grid */}
+      {/* Top Categories */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        <UserGrowthChart data={userAnalytics?.userGrowth || null} isLoading={isLoadingUsers} />
-        <BookingTrendChart data={bookingAnalytics?.bookingTrend || null} isLoading={isLoadingBookings} />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top Categories</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            ) : overview && overview.topCategories.length > 0 ? (
+              <div className="space-y-3">
+                {overview.topCategories.map((cat) => (
+                  <div key={cat.category} className="flex items-center justify-between">
+                    <span className="text-sm">{cat.category}</span>
+                    <span className="text-sm font-medium">{cat.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No data available</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Bookings by Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bookings by Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-8 w-full" />
+                ))}
+              </div>
+            ) : overview ? (
+              <div className="space-y-3">
+                {Object.entries(overview.bookingsByStatus).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <span className="text-sm capitalize">{status.replace('_', ' ')}</span>
+                    <span className="text-sm font-medium">{count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No data available</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        <RevenueChart data={revenueAnalytics?.revenueTrend || null} isLoading={isLoadingRevenue} />
-        <CategoryPieChart data={categoryAnalytics?.topCategories || null} isLoading={isLoadingCategories} />
-      </div>
-
-      {/* Top Artisans */}
-      <div>
-        <TopArtisansTable artisans={null} isLoading={isLoadingOverview} />
-      </div>
+      {/* Top Rated Artisans */}
+      <TopArtisansTable
+        artisans={overview?.ratings.topRated ?? null}
+        isLoading={isLoading}
+      />
     </PageContainer>
   )
 }

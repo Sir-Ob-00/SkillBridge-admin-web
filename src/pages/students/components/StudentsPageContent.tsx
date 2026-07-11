@@ -20,6 +20,7 @@ import {
   deleteStudent,
 } from '@/services/students.service'
 import type { Student, StudentFilters, StudentStatus } from '@/types/student.types'
+import { studentStatus } from '@/types/student.types'
 import { format } from 'date-fns'
 import { Search, MoreVertical, Eye, Ban, Trash2, Check } from 'lucide-react'
 import {
@@ -109,7 +110,9 @@ export default function Students() {
   const handleStatusToggle = async (id: string, status: 'active' | 'suspended') => {
     await statusMutation.mutateAsync({ id, status })
     if (selectedStudent?.id === id) {
-      setSelectedStudent((prev) => prev ? { ...prev, status } : null)
+      setSelectedStudent((prev) =>
+        prev ? { ...prev, isSuspended: status === 'suspended' } : null,
+      )
     }
   }
 
@@ -123,21 +126,18 @@ export default function Students() {
     setFilters({ page: 1, limit: 10, search: '', status: undefined })
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase()
+  const getInitials = (name: string) => {
+    return name
+      .split(/\s+/)
+      .map((part) => part.charAt(0))
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase()
   }
 
-  const getStatusVariant = (status: StudentStatus): 'success' | 'warning' | 'danger' => {
-    switch (status) {
-      case 'active':
-        return 'success'
-      case 'suspended':
-        return 'warning'
-      case 'deleted':
-        return 'danger'
-      default:
-        return 'success'
-    }
+  const getStatusVariant = (status: StudentStatus): 'success' | 'warning' => {
+    return status === 'active' ? 'success' : 'warning'
   }
 
   if (error) {
@@ -225,7 +225,7 @@ export default function Students() {
             </div>
           ))}
         </div>
-      ) : studentsData?.data && studentsData.data.length > 0 ? (
+      ) : studentsData?.items && studentsData.items.length > 0 ? (
         <>
           <Table>
             <TableHeader>
@@ -234,24 +234,26 @@ export default function Students() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
-                <TableHead>Bookings</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {studentsData.data.map((student) => (
+              {studentsData.items.map((student) => {
+                const status = studentStatus(student)
+                return (
                 <TableRow key={student.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="size-8">
-                        <AvatarImage src={student.avatar || undefined} alt={`${student.firstName} ${student.lastName}`} />
+                        <AvatarImage src={student.profileImageUrl || undefined} alt={student.name} />
                         <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                          {getInitials(student.firstName, student.lastName)}
+                          {getInitials(student.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium text-sm">
-                          {student.firstName} {student.lastName}
+                          {student.name}
                         </p>
                         <p className="text-xs text-muted-foreground">{student.email}</p>
                       </div>
@@ -262,17 +264,17 @@ export default function Students() {
                   </TableCell>
                   <TableCell>
                     <StatusBadge
-                      status={student.status}
-                      variant={getStatusVariant(student.status)}
+                      status={status}
+                      variant={getStatusVariant(status)}
                     />
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">
-                      {format(new Date(student.joinedAt), 'MMM dd, yyyy')}
+                      {format(new Date(student.createdAt), 'MMM dd, yyyy')}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-medium">{student.totalBookings}</span>
+                    <span className="text-sm font-medium capitalize">{student.role}</span>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -286,7 +288,7 @@ export default function Students() {
                           <Eye className="size-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        {student.status === 'active' ? (
+                        {status === 'active' ? (
                           <DropdownMenuItem
                             onClick={() => handleStatusToggle(student.id, 'suspended')}
                           >
@@ -312,13 +314,14 @@ export default function Students() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
           <div className="mt-4">
             <Pagination
-              page={studentsData.meta.page}
-              totalPages={studentsData.meta.totalPages}
+              page={studentsData.page}
+              totalPages={studentsData.totalPages}
               onPageChange={handlePageChange}
             />
           </div>

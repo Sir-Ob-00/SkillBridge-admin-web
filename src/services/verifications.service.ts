@@ -1,38 +1,40 @@
 import { API_ENDPOINTS } from '@/constants/api-endpoints'
-import type { ApiResponse } from '@/types/api.types'
-import type {
-  VerificationRequest,
-  VerificationFilters,
-  PaginatedVerificationResponse,
-  VerificationDocument,
-  ApproveVerificationPayload,
-  RejectVerificationPayload,
-  RequestMoreInfoPayload,
-  VerificationStatistics,
-} from '@/types/verification.types'
+import { emptyPage, type ApiResponse, type Paginated } from '@/types/api.types'
+import type { Artisan } from '@/types/artisan.types'
 import apiClient from '@/api/axios'
+
+export type VerificationRequest = Artisan
+
+export interface VerificationFilters {
+  search?: string
+  status?: string
+  page?: number
+  limit?: number
+}
+
+export interface VerificationStatistics {
+  pending: number
+  underReview: number
+  changesRequested: number
+  active: number
+  rejected: number
+  total: number
+}
+
+export type PaginatedVerificationResponse = Paginated<Artisan>
 
 export async function getVerificationRequests(
   params?: VerificationFilters,
 ): Promise<PaginatedVerificationResponse> {
-  const { data } = await apiClient.get<ApiResponse<VerificationRequest[]>>(
+  const { data } = await apiClient.get<ApiResponse<PaginatedVerificationResponse>>(
     API_ENDPOINTS.VERIFICATIONS.LIST,
     { params },
   )
-  
-  return {
-    data: data.data,
-    meta: {
-      page: params?.page || 1,
-      limit: params?.limit || 10,
-      total: data.data.length,
-      totalPages: Math.ceil(data.data.length / (params?.limit || 10)),
-    },
-  }
+  return data.data ?? emptyPage<Artisan>()
 }
 
-export async function getVerificationById(id: string): Promise<VerificationRequest> {
-  const { data } = await apiClient.get<ApiResponse<VerificationRequest>>(
+export async function getVerificationById(id: string): Promise<Artisan> {
+  const { data } = await apiClient.get<ApiResponse<Artisan>>(
     API_ENDPOINTS.VERIFICATIONS.DETAILS(id),
   )
   return data.data
@@ -40,9 +42,9 @@ export async function getVerificationById(id: string): Promise<VerificationReque
 
 export async function approveVerification(
   id: string,
-  payload?: ApproveVerificationPayload,
-): Promise<VerificationRequest> {
-  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
+  payload?: { note?: string },
+): Promise<Artisan> {
+  const { data } = await apiClient.post<ApiResponse<Artisan>>(
     API_ENDPOINTS.VERIFICATIONS.APPROVE(id),
     payload,
   )
@@ -51,9 +53,9 @@ export async function approveVerification(
 
 export async function rejectVerification(
   id: string,
-  payload: RejectVerificationPayload,
-): Promise<VerificationRequest> {
-  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
+  payload: { reason: string },
+): Promise<Artisan> {
+  const { data } = await apiClient.post<ApiResponse<Artisan>>(
     API_ENDPOINTS.VERIFICATIONS.REJECT(id),
     payload,
   )
@@ -62,42 +64,11 @@ export async function rejectVerification(
 
 export async function requestMoreInformation(
   id: string,
-  payload: RequestMoreInfoPayload,
-): Promise<VerificationRequest> {
-  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
+  payload: { message: string },
+): Promise<Artisan> {
+  const { data } = await apiClient.post<ApiResponse<Artisan>>(
     API_ENDPOINTS.VERIFICATIONS.REQUEST_CHANGES(id),
     payload,
-  )
-  return data.data
-}
-
-export async function addVerificationNote(
-  id: string,
-  payload: { note: string },
-): Promise<VerificationRequest> {
-  const { data } = await apiClient.post<ApiResponse<VerificationRequest>>(
-    API_ENDPOINTS.VERIFICATIONS.ADD_NOTE(id),
-    payload,
-  )
-  return data.data
-}
-
-export async function updateVerificationStatus(
-  id: string,
-  status: string,
-): Promise<VerificationRequest> {
-  const { data } = await apiClient.patch<ApiResponse<VerificationRequest>>(
-    API_ENDPOINTS.VERIFICATIONS.UPDATE_STATUS(id),
-    { status },
-  )
-  return data.data
-}
-
-export async function getVerificationDocuments(
-  id: string,
-): Promise<VerificationDocument[]> {
-  const { data } = await apiClient.get<ApiResponse<VerificationDocument[]>>(
-    API_ENDPOINTS.VERIFICATIONS.DOCUMENTS(id),
   )
   return data.data
 }

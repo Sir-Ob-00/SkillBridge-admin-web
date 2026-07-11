@@ -1,17 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import type { TopArtisan } from '@/types/analytics.types'
-import { Award, Star, DollarSign } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import type { TopRatedArtisan } from '@/types/analytics.types'
+import { Award, Star } from 'lucide-react'
 
 interface TopArtisansTableProps {
-  artisans: TopArtisan[] | null
+  artisans: TopRatedArtisan[] | null
   isLoading: boolean
 }
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName[0]}${lastName[0]}`.toUpperCase()
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
 export function TopArtisansTable({ artisans, isLoading }: TopArtisansTableProps) {
@@ -38,11 +43,11 @@ export function TopArtisansTable({ artisans, isLoading }: TopArtisansTableProps)
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Award className="size-4" />
-            Top Artisans
+            Top Rated Artisans
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+          <div className="h-[200px] flex items-center justify-center text-muted-foreground">
             No data available
           </div>
         </CardContent>
@@ -55,41 +60,33 @@ export function TopArtisansTable({ artisans, isLoading }: TopArtisansTableProps)
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Award className="size-4" />
-          Top Artisans
+          Top Rated Artisans
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {artisans.map((artisan, index) => (
             <div
-              key={artisan.id}
+              key={artisan.artisanId}
               className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
             >
               <div className="flex items-center justify-center size-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
                 {index + 1}
               </div>
               <Avatar className="size-10">
-                <AvatarImage src={artisan.avatar || undefined} alt={artisan.name} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
-                  {getInitials(artisan.name, artisan.businessName)}
+                  {getInitials(artisan.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{artisan.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{artisan.businessName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {artisan.reviewCount} reviews
+                </p>
               </div>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <Star className="size-3 text-yellow-500" />
-                  <span className="font-medium">{artisan.averageRating.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <DollarSign className="size-3 text-success" />
-                  <span className="font-medium">${artisan.totalRevenue.toLocaleString()}</span>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {artisan.totalBookings} bookings
-                </Badge>
+              <div className="flex items-center gap-1 text-xs">
+                <Star className="size-3 text-yellow-500" />
+                <span className="font-medium">{artisan.rating.toFixed(1)}</span>
               </div>
             </div>
           ))}

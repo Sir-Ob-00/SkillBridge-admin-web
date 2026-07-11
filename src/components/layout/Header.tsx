@@ -55,9 +55,15 @@ export function Header({
     ? [{ label: currentNav.label }]
     : [{ label: 'Dashboard' }]
 
-  const initials = admin
-    ? `${admin.firstName.charAt(0)}${admin.lastName.charAt(0)}`.toUpperCase()
-    : 'AD'
+  const displayName = admin?.name?.trim() || 'Admin'
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((part) => part.charAt(0))
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || 'AD'
 
   const ThemeIcon = themeIcons[theme]
 
@@ -136,13 +142,13 @@ export function Header({
                 aria-label="Account menu"
               >
                 <Avatar className="size-8">
-                  {admin?.avatar && (
-                    <AvatarImage src={admin.avatar} alt={admin.firstName} />
+                  {admin?.profileImageUrl && (
+                    <AvatarImage src={admin.profileImageUrl} alt={displayName} />
                   )}
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <span className="hidden text-sm font-medium md:inline">
-                  {admin ? `${admin.firstName} ${admin.lastName}` : 'Admin'}
+                  {displayName}
                 </span>
                 <ChevronDown className="size-4 text-muted-foreground" />
               </Button>

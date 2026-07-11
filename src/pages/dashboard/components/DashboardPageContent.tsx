@@ -9,6 +9,8 @@ import {
   Star,
   TrendingUp,
   FileCheck,
+  FolderTree,
+  Flag,
 } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/feedback/PageHeader'
@@ -21,8 +23,16 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity'
 import { TopArtisans } from '@/components/dashboard/TopArtisans'
 import { TopCategories } from '@/components/dashboard/TopCategories'
 import { getApplicationStatistics } from '@/services/artisanApplications.service'
-import { getDashboardOverview } from '@/services/dashboard.service'
+import {
+  getDashboardStatistics,
+  getRecentActivities,
+} from '@/services/dashboard.service'
 import type { ApplicationStatistics } from '@/types/artisanApplication.types'
+import type {
+  CategoryUsage,
+  DashboardActivityLog,
+  RecentActivityItem,
+} from '@/types/dashboard.types'
 import {
   LineChart,
   Line,
@@ -48,15 +58,28 @@ const CHART_COLORS = [
   colors.danger,
 ]
 
+function formatActivityMessage(log: DashboardActivityLog): string {
+  const action = (log.action ?? '').replace(/_/g, ' ').trim().toLowerCase()
+  const resource = (log.resource ?? '').replace(/_/g, ' ').trim().toLowerCase()
+  const text = [action, resource].filter(Boolean).join(' ')
+  if (!text) return 'Activity recorded'
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 export default function Dashboard() {
   const {
-    data: dashboardData,
+    data: stats,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardOverview,
+    queryKey: ['dashboard', 'statistics'],
+    queryFn: getDashboardStatistics,
+  })
+
+  const { data: recentActivities } = useQuery({
+    queryKey: ['dashboard', 'recent-activities'],
+    queryFn: () => getRecentActivities(15),
   })
 
   const { data: applicationStats } = useQuery<ApplicationStatistics>({
@@ -65,138 +88,54 @@ export default function Dashboard() {
   })
 
   const kpiCards = useMemo(() => {
-    if (!dashboardData) return []
+    if (!stats) return []
+
+    const bookingsByStatus = stats.bookingsByStatus
+    const ratings = stats.ratings
 
     return [
       // Users
-      {
-        title: 'Total Students',
-        value: dashboardData.users.students,
-        icon: Users,
-        variant: 'info' as const,
-      },
-      {
-        title: 'Total Artisans',
-        value: dashboardData.users.artisans,
-        icon: Wrench,
-        variant: 'info' as const,
-      },
-      {
-        title: 'Total Admins',
-        value: dashboardData.users.admins,
-        icon: ShieldCheck,
-        variant: 'info' as const,
-      },
+      { title: 'Total Users', value: stats.totalUsers ?? 0, icon: Users },
+      { title: 'Total Students', value: stats.totalStudents ?? 0, icon: Users },
+      { title: 'Total Artisans', value: stats.totalArtisans ?? 0, icon: Wrench },
+      { title: 'Total Admins', value: stats.totalAdmins ?? 0, icon: ShieldCheck },
       // Bookings
-      {
-        title: 'Total Bookings',
-        value: dashboardData.bookings.total,
-        icon: BookOpen,
-        variant: 'info' as const,
-      },
-      {
-        title: 'Pending Bookings',
-        value: dashboardData.bookings.pending,
-        icon: BookOpen,
-        variant: 'warning' as const,
-      },
-      {
-        title: 'Completed Bookings',
-        value: dashboardData.bookings.completed,
-        icon: BookOpen,
-        variant: 'success' as const,
-      },
-      {
-        title: 'Cancelled Bookings',
-        value: dashboardData.bookings.cancelled,
-        icon: BookOpen,
-        variant: 'danger' as const,
-      },
-      // Revenue
-      {
-        title: 'Today Revenue',
-        value: `$${dashboardData.revenue.today.toLocaleString()}`,
-        icon: DollarSign,
-        variant: 'success' as const,
-      },
-      {
-        title: 'Monthly Revenue',
-        value: `$${dashboardData.revenue.monthly.toLocaleString()}`,
-        icon: DollarSign,
-        variant: 'success' as const,
-      },
+      { title: 'Total Bookings', value: stats.totalBookings ?? 0, icon: BookOpen },
+      { title: 'Active Bookings', value: stats.activeBookings ?? 0, icon: BookOpen },
+      { title: 'Pending Bookings', value: bookingsByStatus?.pending ?? 0, icon: BookOpen },
+      { title: 'Completed Bookings', value: stats.completedBookings ?? 0, icon: BookOpen },
+      { title: 'Cancelled Bookings', value: stats.cancelledBookings ?? 0, icon: BookOpen },
+      // Platform
+      { title: 'Pending Verifications', value: stats.pendingVerifications ?? 0, icon: ShieldCheck },
+      { title: 'Total Reviews', value: stats.totalReviews ?? 0, icon: Star },
+      { title: 'Total Reports', value: stats.totalReports ?? 0, icon: Flag },
+      { title: 'Total Categories', value: stats.totalCategories ?? 0, icon: FolderTree },
+      // Revenue & ratings
       {
         title: 'Total Revenue',
-        value: `$${dashboardData.revenue.total.toLocaleString()}`,
-        icon: TrendingUp,
-        variant: 'success' as const,
+        value: `$${(stats.revenue ?? 0).toLocaleString()}`,
+        icon: DollarSign,
       },
-      // Verification
-      {
-        title: 'Pending Verification',
-        value: dashboardData.verification.pending,
-        icon: ShieldCheck,
-        variant: 'warning' as const,
-      },
-      {
-        title: 'Approved Verification',
-        value: dashboardData.verification.approved,
-        icon: ShieldCheck,
-        variant: 'success' as const,
-      },
-      {
-        title: 'Rejected Verification',
-        value: dashboardData.verification.rejected,
-        icon: ShieldCheck,
-        variant: 'danger' as const,
-      },
-      // Ratings
       {
         title: 'Average Rating',
-        value: dashboardData.ratings.average.toFixed(1),
-        icon: Star,
-        variant: 'warning' as const,
+        value: (ratings?.overallAverage ?? 0).toFixed(1),
+        icon: TrendingUp,
       },
-      {
-        title: 'Total Reviews',
-        value: dashboardData.ratings.totalReviews,
-        icon: Star,
-        variant: 'info' as const,
-      },
-      // Artisan Applications
-      ...(applicationStats ? [
-        {
-          title: 'Pending Applications',
-          value: applicationStats.pending,
-          icon: FileCheck,
-          variant: 'warning' as const,
-        },
-        {
-          title: 'Under Review',
-          value: applicationStats.underReview,
-          icon: FileCheck,
-          variant: 'info' as const,
-        },
-        {
-          title: 'Approved Applications',
-          value: applicationStats.approved,
-          icon: FileCheck,
-          variant: 'success' as const,
-        },
-        {
-          title: 'Changes Requested',
-          value: applicationStats.changesRequested,
-          icon: FileCheck,
-          variant: 'secondary' as const,
-        },
-      ] : []),
+      // Artisan Applications (separate endpoint; skipped if unavailable)
+      ...(applicationStats
+        ? [
+            { title: 'Pending Applications', value: applicationStats.pending ?? 0, icon: FileCheck },
+            { title: 'Under Review', value: applicationStats.underReview ?? 0, icon: FileCheck },
+            { title: 'Approved Applications', value: applicationStats.approved ?? 0, icon: FileCheck },
+            { title: 'Changes Requested', value: applicationStats.changesRequested ?? 0, icon: FileCheck },
+          ]
+        : []),
     ]
-  }, [dashboardData, applicationStats])
+  }, [stats, applicationStats])
 
   const bookingTrendsData = useMemo(() => {
-    if (!dashboardData) return []
-    // This would normally come from the API
-    // For now, we'll use placeholder data
+    if (!stats) return []
+    // Placeholder trend until a time-series endpoint exists.
     return [
       { name: 'Mon', bookings: 12 },
       { name: 'Tue', bookings: 19 },
@@ -206,27 +145,44 @@ export default function Dashboard() {
       { name: 'Sat', bookings: 35 },
       { name: 'Sun', bookings: 25 },
     ]
-  }, [dashboardData])
+  }, [stats])
 
   const revenueData = useMemo(() => {
-    if (!dashboardData) return []
-    // This would normally come from the API
+    if (!stats) return []
+    const total = stats.revenue ?? 0
     return [
-      { name: 'Week 1', revenue: dashboardData.revenue.monthly * 0.2 },
-      { name: 'Week 2', revenue: dashboardData.revenue.monthly * 0.25 },
-      { name: 'Week 3', revenue: dashboardData.revenue.monthly * 0.3 },
-      { name: 'Week 4', revenue: dashboardData.revenue.monthly * 0.25 },
+      { name: 'Week 1', revenue: total * 0.2 },
+      { name: 'Week 2', revenue: total * 0.25 },
+      { name: 'Week 3', revenue: total * 0.3 },
+      { name: 'Week 4', revenue: total * 0.25 },
     ]
-  }, [dashboardData])
+  }, [stats])
+
+  const topCategories = useMemo<CategoryUsage[]>(() => {
+    return (stats?.topCategories ?? []).map((cat) => ({
+      name: cat.category,
+      count: cat.count,
+    }))
+  }, [stats])
 
   const categoryDistributionData = useMemo(() => {
-    if (!dashboardData) return []
-    return dashboardData.topCategories.map((cat, index) => ({
+    return topCategories.map((cat, index) => ({
       name: cat.name,
       value: cat.count,
       color: CHART_COLORS[index % CHART_COLORS.length],
     }))
-  }, [dashboardData])
+  }, [topCategories])
+
+  const activities = useMemo<RecentActivityItem[]>(() => {
+    return (recentActivities ?? []).map((log) => ({
+      id: log.id,
+      type: (log.action ?? 'default').toLowerCase(),
+      message: formatActivityMessage(log),
+      createdAt: log.createdAt,
+    }))
+  }, [recentActivities])
+
+  const topArtisans = stats?.ratings?.topRated ?? []
 
   if (error) {
     return (
@@ -394,26 +350,20 @@ export default function Dashboard() {
         </Card>
 
         {/* Recent Activity */}
-        <RecentActivity
-          activities={dashboardData?.recentActivity ?? []}
-          isLoading={isLoading}
-        />
+        <RecentActivity activities={activities} isLoading={isLoading} />
       </div>
 
       {/* Bottom Section */}
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {/* Top Artisans */}
-        <TopArtisans artisans={dashboardData?.topArtisans ?? []} isLoading={isLoading} />
+        <TopArtisans artisans={topArtisans} isLoading={isLoading} />
 
         {/* Top Categories */}
-        <TopCategories
-          categories={dashboardData?.topCategories ?? []}
-          isLoading={isLoading}
-        />
+        <TopCategories categories={topCategories} isLoading={isLoading} />
       </div>
 
       {/* Empty State */}
-      {!isLoading && !dashboardData && (
+      {!isLoading && !stats && (
         <EmptyState
           title="No dashboard data available"
           description="Start using the platform to see your dashboard statistics."

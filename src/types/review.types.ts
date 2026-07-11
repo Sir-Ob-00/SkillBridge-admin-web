@@ -1,113 +1,47 @@
-export type ReviewStatus = 'visible' | 'hidden' | 'flagged' | 'removed'
+import type { Paginated } from '@/types/api.types'
+
+export interface ReviewParticipantUser {
+  id: string
+  name: string
+  profileImageUrl?: string | null
+  email?: string
+}
+
+export interface ReviewArtisan {
+  user: ReviewParticipantUser
+}
+
+export interface ReviewStudent {
+  id: string
+  name: string
+  profileImageUrl?: string | null
+  email?: string
+}
 
 export interface Review {
   id: string
   bookingId: string
   studentId: string
-  studentFirstName: string
-  studentLastName: string
-  studentEmail: string
-  studentPhone?: string
-  studentAvatar?: string | null
   artisanId: string
-  artisanFirstName: string
-  artisanLastName: string
-  artisanBusinessName?: string
-  artisanEmail: string
-  artisanPhone?: string
-  artisanAvatar?: string | null
-  artisanAverageRating?: number
-  categoryId: string
-  categoryName: string
   rating: number
   comment: string
-  status: ReviewStatus
+  isFlagged: boolean
   createdAt: string
-  updatedAt: string
-  hiddenAt?: string
-  hiddenBy?: string
-  hiddenReason?: string
-  flaggedAt?: string
-  flaggedBy?: string
-  flagReason?: string
-  removedAt?: string
-  removedBy?: string
-  removalReason?: string
-  restoredAt?: string
-  restoredBy?: string
-  adminNotes?: string
-}
-
-export interface ReviewHistory {
-  id: string
-  reviewId: string
-  action: 'submitted' | 'hidden' | 'restored' | 'flagged' | 'removed' | 'note_added'
-  performedBy: string
-  performedAt: string
-  notes?: string
-  metadata?: Record<string, unknown>
+  student: ReviewStudent
+  artisan: ReviewArtisan
 }
 
 export interface ReviewFilters {
   search?: string
-  rating?: number
-  status?: ReviewStatus
-  categoryId?: string
-  artisanId?: string
-  studentId?: string
-  dateFrom?: string
-  dateTo?: string
-  sortBy?: 'newest' | 'oldest' | 'highest_rating' | 'lowest_rating' | 'recently_updated'
+  flagged?: boolean
   page?: number
   limit?: number
 }
 
 export interface ReviewStatistics {
-  totalReviews: number
+  total: number
+  flagged: number
   averageRating: number
-  hiddenReviews: number
-  flaggedReviews: number
-  removedReviews: number
-  todayReviews: number
-  monthReviews: number
-  ratingDistribution: {
-    1: number
-    2: number
-    3: number
-    4: number
-    5: number
-  }
 }
 
-export interface PaginatedReviewResponse {
-  data: Review[]
-  meta: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-}
-
-export interface UpdateReviewStatusPayload {
-  status: ReviewStatus
-  note?: string
-}
-
-export interface HideReviewPayload {
-  reason?: string
-  note?: string
-}
-
-export interface RestoreReviewPayload {
-  note?: string
-}
-
-export interface FlagReviewPayload {
-  reason: string
-  note?: string
-}
-
-export interface DeleteReviewPayload {
-  reason: string
-}
+export type PaginatedReviewResponse = Paginated<Review>

@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { format } from 'date-fns'
 import type { StudentDetails, StudentStatus } from '@/types/student.types'
+import { studentStatus } from '@/types/student.types'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Calendar, Mail, Phone, MapPin, BookOpen, AlertTriangle } from 'lucide-react'
 
@@ -25,21 +26,18 @@ interface StudentDetailsModalProps {
   onDelete: (id: string) => void
 }
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName[0]}${lastName[0]}`.toUpperCase()
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((part) => part.charAt(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
-function getStatusVariant(status: StudentStatus): 'success' | 'warning' | 'danger' {
-  switch (status) {
-    case 'active':
-      return 'success'
-    case 'suspended':
-      return 'warning'
-    case 'deleted':
-      return 'danger'
-    default:
-      return 'success'
-  }
+function getStatusVariant(status: StudentStatus): 'success' | 'warning' {
+  return status === 'active' ? 'success' : 'warning'
 }
 
 export function StudentDetailsModal({
@@ -56,7 +54,7 @@ export function StudentDetailsModal({
     if (!student) return
     setIsActionLoading(true)
     try {
-      const newStatus = student.status === 'active' ? 'suspended' : 'active'
+      const newStatus = studentStatus(student) === 'active' ? 'suspended' : 'active'
       await onStatusChange(student.id, newStatus)
     } finally {
       setIsActionLoading(false)
@@ -105,6 +103,8 @@ export function StudentDetailsModal({
 
   if (!student) return null
 
+  const status = studentStatus(student)
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -116,19 +116,19 @@ export function StudentDetailsModal({
           {/* Profile Info */}
           <div className="flex items-start gap-4">
             <Avatar className="size-16">
-              <AvatarImage src={student.avatar || undefined} alt={`${student.firstName} ${student.lastName}`} />
+              <AvatarImage src={student.profileImageUrl || undefined} alt={student.name} />
               <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                {getInitials(student.firstName, student.lastName)}
+                {getInitials(student.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <h3 className="text-xl font-semibold">
-                {student.firstName} {student.lastName}
+                {student.name}
               </h3>
               <div className="mt-2 flex items-center gap-2">
                 <StatusBadge
-                  status={student.status}
-                  variant={getStatusVariant(student.status)}
+                  status={status}
+                  variant={getStatusVariant(status)}
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export function StudentDetailsModal({
               <div>
                 <p className="text-xs text-muted-foreground">Joined</p>
                 <p className="text-sm font-medium">
-                  {format(new Date(student.joinedAt), 'MMM dd, yyyy')}
+                  {format(new Date(student.createdAt), 'MMM dd, yyyy')}
                 </p>
               </div>
             </div>
@@ -184,15 +184,15 @@ export function StudentDetailsModal({
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="text-center">
-                  <p className="text-2xl font-bold">{student.totalBookings}</p>
+                  <p className="text-2xl font-bold">{student.totalBookings ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Total Bookings</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-success">{student.completedBookings}</p>
+                  <p className="text-2xl font-bold text-success">{student.completedBookings ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Completed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-danger">{student.cancelledBookings}</p>
+                  <p className="text-2xl font-bold text-danger">{student.cancelledBookings ?? 0}</p>
                   <p className="text-xs text-muted-foreground">Cancelled</p>
                 </div>
               </div>
@@ -209,15 +209,15 @@ export function StudentDetailsModal({
                 variant="outline"
                 className="w-full"
                 onClick={handleStatusToggle}
-                disabled={isActionLoading || student.status === 'deleted'}
+                disabled={isActionLoading}
               >
-                {student.status === 'active' ? 'Suspend Account' : 'Activate Account'}
+                {status === 'active' ? 'Suspend Account' : 'Activate Account'}
               </Button>
               <Button
                 variant="danger"
                 className="w-full"
                 onClick={handleDelete}
-                disabled={isActionLoading || student.status === 'deleted'}
+                disabled={isActionLoading}
               >
                 <AlertTriangle className="size-4 mr-2" />
                 Delete Account
