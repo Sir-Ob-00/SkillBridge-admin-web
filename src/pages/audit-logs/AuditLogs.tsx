@@ -1,5 +1,5 @@
-﻿import AuditLogsPage from './components/AuditLogsPage'
+﻿import AuditLogsPageContent from './components/AuditLogsPageContent'
 
 export default function AuditLogs() {
-  return <AuditLogsPage />
+  return <AuditLogsPageContent />
 }

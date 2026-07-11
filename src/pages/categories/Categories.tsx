@@ -1,5 +1,5 @@
-﻿import CategoriesPage from './components/CategoriesPage'
+﻿import CategoriesPageContent from './components/CategoriesPageContent'
 
 export default function Categories() {
-  return <CategoriesPage />
+  return <CategoriesPageContent />
 }

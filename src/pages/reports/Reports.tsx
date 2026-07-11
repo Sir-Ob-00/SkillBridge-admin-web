@@ -1,5 +1,5 @@
-﻿import ReportsPage from './components/ReportsPage'
+﻿import ReportsPageContent from './components/ReportsPageContent'
 
 export default function Reports() {
-  return <ReportsPage />
+  return <ReportsPageContent />
 }

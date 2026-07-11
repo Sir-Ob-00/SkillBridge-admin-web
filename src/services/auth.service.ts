@@ -7,7 +7,7 @@ import type {
   LoginCredentials,
   LoginResponse,
 } from '@/types/auth.types'
-import apiClient from './axios'
+import apiClient from '@/api/axios'
 
 export async function login(
   credentials: LoginCredentials,

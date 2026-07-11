@@ -1,5 +1,5 @@
-﻿import ArtisansPage from './components/ArtisansPage'
+﻿import { ArtisansPageContent } from './components/ArtisansPageContent'
 
 export default function Artisans() {
-  return <ArtisansPage />
+  return <ArtisansPageContent />
 }

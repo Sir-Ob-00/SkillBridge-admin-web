@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { getAdminSocket } from '@/sockets/admin.socket'
 import { mapEventToNotification, mapEventToActivityItem } from '@/modules/notifications/adminNotifications'
-import { useNotificationStore } from '@/stores/notificationStore'
+import { useNotificationStore } from '@/store/notification.store'
 import toast from 'react-hot-toast'
 
 export function useAdminNotifications() {

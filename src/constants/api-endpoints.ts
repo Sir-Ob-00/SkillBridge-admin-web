@@ -135,25 +135,10 @@ export const API_ENDPOINTS = {
     UPDATE_STATUS: (id: string) => `/admin/users/${id}/status`,
     DELETE: (id: string) => `/admin/users/${id}`,
   },
-  ADMINS: {
-    LIST: '/admin/users/admins',
-    DETAILS: (id: string) => `/admin/users/${id}`,
-    CREATE: '/admin/users',
-    UPDATE: (id: string) => `/admin/users/${id}`,
-    UPDATE_STATUS: (id: string) => `/admin/users/${id}/status`,
-    DELETE: (id: string) => `/admin/users/${id}`,
-  },
   AUDIT_LOGS: {
     LIST: '/admin/audit-logs',
     EXPORT: '/admin/audit-logs/export',
     DETAILS: (id: string) => `/admin/audit-logs/${id}`,
-  },
-  APPLICATIONS: {
-    LIST: '/admin/applications',
-    DETAILS: (id: string) => `/admin/applications/${id}`,
-    APPROVE: (id: string) => `/admin/applications/${id}/approve`,
-    REJECT: (id: string) => `/admin/applications/${id}/reject`,
-    REQUEST_CHANGES: (id: string) => `/admin/applications/${id}/request-changes`,
   },
   PORTFOLIO: {
     LIST: '/admin/portfolio',

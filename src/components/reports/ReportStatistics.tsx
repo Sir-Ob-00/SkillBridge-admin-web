@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card'
+import { StatTileGrid, type StatTileItem } from '@/components/common/StatTile'
 import type { ReportStatistics } from '@/types/report.types'
 import { AlertTriangle, CheckCircle, Clock, XCircle, FileText, Calendar, ShieldAlert } from 'lucide-react'
 
@@ -7,96 +7,52 @@ interface ReportStatisticsProps {
 }
 
 export function ReportStatistics({ statistics }: ReportStatisticsProps) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Reports</p>
-              <p className="text-2xl font-bold">{statistics.totalReports}</p>
-            </div>
-            <FileText className="size-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Open</p>
-              <p className="text-2xl font-bold text-warning">{statistics.openReports}</p>
-            </div>
-            <Clock className="size-8 text-warning" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Under Investigation</p>
-              <p className="text-2xl font-bold text-blue-500">{statistics.underInvestigation}</p>
-            </div>
-            <AlertTriangle className="size-8 text-blue-500" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Pending Response</p>
-              <p className="text-2xl font-bold text-purple-500">{statistics.pendingResponse}</p>
-            </div>
-            <Clock className="size-8 text-purple-500" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Resolved</p>
-              <p className="text-2xl font-bold text-success">{statistics.resolved}</p>
-            </div>
-            <CheckCircle className="size-8 text-success" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Dismissed</p>
-              <p className="text-2xl font-bold text-muted-foreground">{statistics.dismissed}</p>
-            </div>
-            <XCircle className="size-8 text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Critical</p>
-              <p className="text-2xl font-bold text-danger">{statistics.criticalReports}</p>
-            </div>
-            <ShieldAlert className="size-8 text-danger" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Today's Reports</p>
-              <p className="text-2xl font-bold">{statistics.todayReports}</p>
-            </div>
-            <Calendar className="size-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  const items: StatTileItem[] = [
+    { label: 'Total Reports', value: statistics.totalReports, icon: FileText },
+    {
+      label: 'Open',
+      value: statistics.openReports,
+      icon: Clock,
+      valueClassName: 'text-warning',
+      iconClassName: 'text-warning',
+    },
+    {
+      label: 'Under Investigation',
+      value: statistics.underInvestigation,
+      icon: AlertTriangle,
+      valueClassName: 'text-blue-500',
+      iconClassName: 'text-blue-500',
+    },
+    {
+      label: 'Pending Response',
+      value: statistics.pendingResponse,
+      icon: Clock,
+      valueClassName: 'text-purple-500',
+      iconClassName: 'text-purple-500',
+    },
+    {
+      label: 'Resolved',
+      value: statistics.resolved,
+      icon: CheckCircle,
+      valueClassName: 'text-success',
+      iconClassName: 'text-success',
+    },
+    {
+      label: 'Dismissed',
+      value: statistics.dismissed,
+      icon: XCircle,
+      valueClassName: 'text-muted-foreground',
+      iconClassName: 'text-muted-foreground',
+    },
+    {
+      label: 'Critical',
+      value: statistics.criticalReports,
+      icon: ShieldAlert,
+      valueClassName: 'text-danger',
+      iconClassName: 'text-danger',
+    },
+    { label: "Today's Reports", value: statistics.todayReports, icon: Calendar },
+  ]
+
+  return <StatTileGrid items={items} />
 }

@@ -1,5 +1,5 @@
-﻿import ReviewsPage from './components/ReviewsPage'
+﻿import ReviewsPageContent from './components/ReviewsPageContent'
 
 export default function Reviews() {
-  return <ReviewsPage />
+  return <ReviewsPageContent />
 }

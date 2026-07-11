@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card'
+import { StatTileGrid, type StatTileItem } from '@/components/common/StatTile'
 import type { BookingStatistics } from '@/types/booking.types'
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp } from 'lucide-react'
 
@@ -7,96 +7,46 @@ interface BookingStatisticsProps {
 }
 
 export function BookingStatistics({ statistics }: BookingStatisticsProps) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Bookings</p>
-              <p className="text-2xl font-bold">{statistics.totalBookings}</p>
-            </div>
-            <Calendar className="size-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold text-warning">{statistics.pending}</p>
-            </div>
-            <Clock className="size-8 text-warning" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Active Jobs</p>
-              <p className="text-2xl font-bold text-blue-500">{statistics.activeJobs}</p>
-            </div>
-            <TrendingUp className="size-8 text-blue-500" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
-              <p className="text-2xl font-bold text-success">{statistics.completed}</p>
-            </div>
-            <CheckCircle className="size-8 text-success" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Cancelled</p>
-              <p className="text-2xl font-bold text-muted-foreground">{statistics.cancelled}</p>
-            </div>
-            <XCircle className="size-8 text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Disputed</p>
-              <p className="text-2xl font-bold text-danger">{statistics.disputed}</p>
-            </div>
-            <AlertCircle className="size-8 text-danger" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Today's Bookings</p>
-              <p className="text-2xl font-bold">{statistics.todayBookings}</p>
-            </div>
-            <Calendar className="size-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">This Month</p>
-              <p className="text-2xl font-bold">{statistics.monthBookings}</p>
-            </div>
-            <Calendar className="size-8 text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  const items: StatTileItem[] = [
+    { label: 'Total Bookings', value: statistics.totalBookings, icon: Calendar },
+    {
+      label: 'Pending',
+      value: statistics.pending,
+      icon: Clock,
+      valueClassName: 'text-warning',
+      iconClassName: 'text-warning',
+    },
+    {
+      label: 'Active Jobs',
+      value: statistics.activeJobs,
+      icon: TrendingUp,
+      valueClassName: 'text-blue-500',
+      iconClassName: 'text-blue-500',
+    },
+    {
+      label: 'Completed',
+      value: statistics.completed,
+      icon: CheckCircle,
+      valueClassName: 'text-success',
+      iconClassName: 'text-success',
+    },
+    {
+      label: 'Cancelled',
+      value: statistics.cancelled,
+      icon: XCircle,
+      valueClassName: 'text-muted-foreground',
+      iconClassName: 'text-muted-foreground',
+    },
+    {
+      label: 'Disputed',
+      value: statistics.disputed,
+      icon: AlertCircle,
+      valueClassName: 'text-danger',
+      iconClassName: 'text-danger',
+    },
+    { label: "Today's Bookings", value: statistics.todayBookings, icon: Calendar },
+    { label: 'This Month', value: statistics.monthBookings, icon: Calendar },
+  ]
+
+  return <StatTileGrid items={items} />
 }

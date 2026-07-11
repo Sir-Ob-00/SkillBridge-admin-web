@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentAdmin, login as loginApi, logout as logoutApi } from '@/api/auth.api'
+import { getCurrentAdmin, login as loginApi, logout as logoutApi } from '@/services/auth.service'
 import { APP_ROUTES } from '@/config/routes'
 import { useAuthStore } from '@/store/auth.store'
 import type { LoginCredentials } from '@/types/auth.types'

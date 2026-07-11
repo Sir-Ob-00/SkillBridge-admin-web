@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Users, Calendar, CheckCircle, XCircle, Star, DollarSign } from 'lucide-react'
+import { StatTileGrid, type StatTileItem } from '@/components/common/StatTile'
 import type { CategoryStatistics } from '@/types/category.types'
 
 interface CategoryStatisticsProps {
@@ -22,72 +23,23 @@ export function CategoryStatistics({ statistics, isLoading = false }: CategorySt
     )
   }
 
-  const stats = [
-    {
-      title: 'Total Artisans',
-      value: statistics.totalArtisans,
-      icon: Users,
-      color: 'text-primary',
-    },
-    {
-      title: 'Active Artisans',
-      value: statistics.activeArtisans,
-      icon: CheckCircle,
-      color: 'text-success',
-    },
-    {
-      title: 'Bookings This Month',
-      value: statistics.bookingsThisMonth,
-      icon: Calendar,
-      color: 'text-warning',
-    },
-    {
-      title: 'Completed Bookings',
-      value: statistics.completedBookings,
-      icon: CheckCircle,
-      color: 'text-success',
-    },
-    {
-      title: 'Cancelled Bookings',
-      value: statistics.cancelledBookings,
-      icon: XCircle,
-      color: 'text-danger',
-    },
-    {
-      title: 'Average Rating',
-      value: statistics.averageRating.toFixed(1),
-      icon: Star,
-      color: 'text-warning',
-    },
+  const items: StatTileItem[] = [
+    { label: 'Total Artisans', value: statistics.totalArtisans, icon: Users, iconClassName: 'text-primary' },
+    { label: 'Active Artisans', value: statistics.activeArtisans, icon: CheckCircle, iconClassName: 'text-success' },
+    { label: 'Bookings This Month', value: statistics.bookingsThisMonth, icon: Calendar, iconClassName: 'text-warning' },
+    { label: 'Completed Bookings', value: statistics.completedBookings, icon: CheckCircle, iconClassName: 'text-success' },
+    { label: 'Cancelled Bookings', value: statistics.cancelledBookings, icon: XCircle, iconClassName: 'text-danger' },
+    { label: 'Average Rating', value: statistics.averageRating.toFixed(1), icon: Star, iconClassName: 'text-warning' },
   ]
 
   if (statistics.revenue !== undefined) {
-    stats.push({
-      title: 'Revenue',
+    items.push({
+      label: 'Revenue',
       value: `$${statistics.revenue.toLocaleString()}`,
       icon: DollarSign,
-      color: 'text-success',
+      iconClassName: 'text-success',
     })
   }
 
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon
-        return (
-          <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                </div>
-                <Icon className={`size-8 ${stat.color}`} />
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })}
-    </div>
-  )
+  return <StatTileGrid items={items} className="lg:grid-cols-3" />
 }

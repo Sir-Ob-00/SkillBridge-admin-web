@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useNotificationStore } from '@/stores/notificationStore'
+import { useNotificationStore } from '@/store/notification.store'
 import { format } from 'date-fns'
 import { Activity, CheckCircle, AlertTriangle, ShieldAlert, X, Bell } from 'lucide-react'
 

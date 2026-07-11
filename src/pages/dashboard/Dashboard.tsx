@@ -1,5 +1,5 @@
-﻿import DashboardPage from './components/DashboardPage'
+﻿import DashboardPageContent from './components/DashboardPageContent'
 
 export default function Dashboard() {
-  return <DashboardPage />
+  return <DashboardPageContent />
 }

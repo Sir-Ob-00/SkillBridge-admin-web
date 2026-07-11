@@ -1,5 +1,5 @@
-﻿import VerificationsPage from './components/VerificationsPage'
+﻿import VerificationsPageContent from './components/VerificationsPageContent'
 
 export default function Verifications() {
-  return <VerificationsPage />
+  return <VerificationsPageContent />
 }

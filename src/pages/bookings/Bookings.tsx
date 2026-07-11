@@ -1,5 +1,5 @@
-﻿import BookingsPage from './components/BookingsPage'
+﻿import BookingsPageContent from './components/BookingsPageContent'
 
 export default function Bookings() {
-  return <BookingsPage />
+  return <BookingsPageContent />
 }
