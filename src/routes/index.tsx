@@ -15,6 +15,7 @@ const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'))
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'))
 const Students = lazy(() => import('@/pages/students/Students'))
 const Artisans = lazy(() => import('@/pages/artisans/Artisans'))
+const Skills = lazy(() => import('@/pages/skills/Skills'))
 const Verifications = lazy(() => import('@/pages/verifications/Verifications'))
 const Categories = lazy(() => import('@/pages/categories/Categories'))
 const Bookings = lazy(() => import('@/pages/bookings/Bookings'))
@@ -100,6 +101,14 @@ const router = createBrowserRouter([
         element: (
           <LazyPage>
             <Categories />
+          </LazyPage>
+        ),
+      },
+      {
+        path: DASHBOARD_ROUTES.SKILLS,
+        element: (
+          <LazyPage>
+            <Skills />
           </LazyPage>
         ),
       },

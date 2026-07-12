@@ -14,6 +14,7 @@ import {
   Wrench,
   ScrollText,
   Flag,
+  Zap,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DASHBOARD_ROUTES } from '@/config/routes'
@@ -26,6 +27,7 @@ const navItems = [
   { label: 'Students', href: DASHBOARD_ROUTES.STUDENTS, icon: Users },
   { label: 'Artisans', href: DASHBOARD_ROUTES.ARTISANS, icon: Wrench },
   { label: 'Categories', href: DASHBOARD_ROUTES.CATEGORIES, icon: FolderTree },
+  { label: 'Skills', href: DASHBOARD_ROUTES.SKILLS, icon: Zap },
   { label: 'Artisan Verification', href: DASHBOARD_ROUTES.VERIFICATION, icon: ShieldCheck },
   { label: 'Bookings', href: DASHBOARD_ROUTES.BOOKINGS, icon: BookOpen },
   { label: 'Reviews', href: DASHBOARD_ROUTES.REVIEWS, icon: Star },

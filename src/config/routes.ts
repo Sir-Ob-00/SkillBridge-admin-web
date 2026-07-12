@@ -12,6 +12,7 @@ export const DASHBOARD_ROUTES = {
   STUDENTS: '/dashboard/students',
   ARTISANS: '/dashboard/artisans',
   CATEGORIES: '/dashboard/categories',
+  SKILLS: '/dashboard/skills',
   VERIFICATION: '/dashboard/verification',
   BOOKINGS: '/dashboard/bookings',
   REVIEWS: '/dashboard/reviews',

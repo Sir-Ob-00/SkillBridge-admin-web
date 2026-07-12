@@ -153,6 +153,13 @@ export const API_ENDPOINTS = {
     REQUEST_CHANGES: (id: string) => `/admin/applications/${id}/request-changes`,
     UPDATE_STATUS: (id: string) => `/admin/applications/${id}/status`,
   },
+  SKILLS: {
+    LIST: '/admin/skills',
+    DETAILS: (id: string) => `/admin/skills/${id}`,
+    CREATE: '/admin/skills',
+    UPDATE: (id: string) => `/admin/skills/${id}`,
+    DELETE: (id: string) => `/admin/skills/${id}`,
+  },
 } as const
 
 export type ApiEndpoint =
