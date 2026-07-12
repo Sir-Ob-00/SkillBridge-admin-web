@@ -5,6 +5,8 @@ const getEnv = (key: keyof ImportMetaEnv, fallback = ''): string => {
 
 export const env = {
   apiBaseUrl: getEnv('VITE_API_BASE_URL', 'http://localhost:3000/api'),
+  socketUrl: getEnv('VITE_SOCKET_URL', window.location.origin),
+  socketPath: getEnv('VITE_SOCKET_PATH', '/socket.io/'),
   appName: getEnv('VITE_APP_NAME', 'SkillBridge Admin'),
   appVersion: getEnv('VITE_APP_VERSION', '1.0.0'),
   isDev: import.meta.env.DEV,
