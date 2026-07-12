@@ -27,6 +27,7 @@ import {
   getDashboardStatistics,
   getRecentActivities,
 } from '@/services/dashboard.service'
+import { getTopCategories } from '@/services/analytics.service'
 import type { ApplicationStatistics } from '@/types/artisanApplication.types'
 import type {
   CategoryUsage,
@@ -85,6 +86,11 @@ export default function Dashboard() {
   const { data: applicationStats } = useQuery<ApplicationStatistics>({
     queryKey: ['application-statistics'],
     queryFn: getApplicationStatistics,
+  })
+
+  const { data: topCategoriesData, isLoading: isLoadingTopCategories } = useQuery({
+    queryKey: ['dashboard', 'top-categories'],
+    queryFn: getTopCategories,
   })
 
   const kpiCards = useMemo(() => {
@@ -161,11 +167,11 @@ export default function Dashboard() {
   }, [stats])
 
   const topCategories = useMemo<CategoryUsage[]>(() => {
-    return (stats?.topCategories ?? []).map((cat) => ({
+    return (topCategoriesData ?? []).map((cat) => ({
       name: cat.category,
       count: cat.count,
     }))
-  }, [stats])
+  }, [topCategoriesData])
 
   const categoryDistributionData = useMemo(() => {
     return topCategories.map((cat, index) => ({
@@ -362,7 +368,7 @@ export default function Dashboard() {
         <TopArtisans artisans={topArtisans} isLoading={isLoading} />
 
         {/* Top Categories */}
-        <TopCategories categories={topCategories} isLoading={isLoading} />
+        <TopCategories categories={topCategories} isLoading={isLoadingTopCategories} />
       </div>
 
       {/* Empty State */}

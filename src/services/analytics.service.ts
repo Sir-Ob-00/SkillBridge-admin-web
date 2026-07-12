@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from '@/constants/api-endpoints'
 import type { ApiResponse } from '@/types/api.types'
-import type { DashboardAnalytics } from '@/types/analytics.types'
+import type { CategoryUsage, DashboardAnalytics } from '@/types/analytics.types'
 import apiClient from '@/api/axios'
 
 export async function getAnalyticsOverview(
@@ -71,4 +71,11 @@ export async function getRevenueAnalytics(
     { params },
   )
   return data.data
+}
+
+export async function getTopCategories(): Promise<CategoryUsage[]> {
+  const { data } = await apiClient.get<ApiResponse<CategoryUsage[]>>(
+    API_ENDPOINTS.ANALYTICS.TOP_CATEGORIES,
+  )
+  return data.data ?? []
 }

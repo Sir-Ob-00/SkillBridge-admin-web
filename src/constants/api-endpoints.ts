@@ -106,6 +106,7 @@ export const API_ENDPOINTS = {
     REPORTS: '/admin/analytics/reports',
     CATEGORIES: '/admin/analytics/categories',
     REVENUE: '/admin/analytics/revenue',
+    TOP_CATEGORIES: '/analytics/top-categories',
   },
   SETTINGS: {
     GET: '/admin/settings',
