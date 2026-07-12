@@ -13,9 +13,23 @@ import apiClient from '@/api/axios'
 export async function getCategories(
   params?: CategoryFilters,
 ): Promise<CategoryList> {
+  console.log('Categories API raw params:', params)
+
+  const cleanParams: Record<string, string> = {}
+
+  if (params?.search && params.search.trim()) {
+    cleanParams.search = params.search.trim()
+  }
+
+  if (typeof params?.activeOnly === 'boolean') {
+    cleanParams.activeOnly = params.activeOnly ? 'true' : 'false'
+  }
+
+  console.log('Categories API cleanParams:', cleanParams)
+
   const { data } = await apiClient.get<ApiResponse<CategoryList>>(
     API_ENDPOINTS.CATEGORIES.LIST,
-    { params },
+    Object.keys(cleanParams).length > 0 ? { params: cleanParams } : undefined,
   )
   return data.data ?? []
 }

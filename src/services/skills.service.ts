@@ -5,9 +5,17 @@ import apiClient from '@/api/axios'
 export async function getSkills(
   params?: SkillFilters,
 ): Promise<SkillList> {
+  const cleanParams = params
+    ? Object.fromEntries(
+        Object.entries(params).filter(
+          ([, value]) => value !== undefined && value !== null && value !== '',
+        ),
+      )
+    : undefined
+
   const { data } = await apiClient.get<{ success: true; data: SkillList }>(
     API_ENDPOINTS.SKILLS.LIST,
-    { params },
+    { params: cleanParams },
   )
   return data.data ?? []
 }

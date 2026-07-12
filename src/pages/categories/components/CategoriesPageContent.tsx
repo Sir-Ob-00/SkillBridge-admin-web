@@ -33,8 +33,8 @@ import toast from 'react-hot-toast'
 export default function Categories() {
   const queryClient = useQueryClient()
   const [filters, setFilters] = useState<CategoryFilters>({
-    search: '',
-    active: undefined,
+    search: undefined,
+    activeOnly: undefined,
   })
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [isFormDrawerOpen, setIsFormDrawerOpen] = useState(false)
@@ -94,11 +94,12 @@ export default function Categories() {
   })
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, search: e.target.value }))
+    const value = e.target.value.trim()
+    setFilters((prev) => ({ ...prev, search: value ? value : undefined }))
   }
 
-  const handleStatusFilterChange = (active: boolean | undefined) => {
-    setFilters((prev) => ({ ...prev, active }))
+  const handleStatusFilterChange = (activeOnly: boolean | undefined) => {
+    setFilters((prev) => ({ ...prev, activeOnly }))
   }
 
   const handleCreate = () => {
@@ -129,7 +130,7 @@ export default function Categories() {
   }
 
   const handleResetFilters = () => {
-    setFilters({ search: '', active: undefined })
+    setFilters({ search: undefined, activeOnly: undefined })
   }
 
   if (categoriesError) {
@@ -225,28 +226,28 @@ export default function Categories() {
           <Button
             variant="outline"
             onClick={handleResetFilters}
-            disabled={!filters.search && filters.active === undefined}
+            disabled={!filters.search && filters.activeOnly === undefined}
           >
             Reset
           </Button>
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant={filters.active === undefined ? 'primary' : 'outline'}
+            variant={filters.activeOnly === undefined ? 'primary' : 'outline'}
             size="sm"
             onClick={() => handleStatusFilterChange(undefined)}
           >
             All
           </Button>
           <Button
-            variant={filters.active === true ? 'primary' : 'outline'}
+            variant={filters.activeOnly === true ? 'primary' : 'outline'}
             size="sm"
             onClick={() => handleStatusFilterChange(true)}
           >
             Active
           </Button>
           <Button
-            variant={filters.active === false ? 'primary' : 'outline'}
+            variant={filters.activeOnly === false ? 'primary' : 'outline'}
             size="sm"
             onClick={() => handleStatusFilterChange(false)}
           >
@@ -333,13 +334,13 @@ export default function Categories() {
         <EmptyState
           title="No categories found"
           description={
-            filters.search || filters.active !== undefined
+            filters.search || filters.activeOnly !== undefined
               ? 'No categories match your current filters.'
               : 'No categories have been created yet.'
           }
-          actionLabel={filters.search || filters.active !== undefined ? 'Clear Filters' : 'Create Category'}
+          actionLabel={filters.search || filters.activeOnly !== undefined ? 'Clear Filters' : 'Create Category'}
           onAction={
-            filters.search || filters.active !== undefined
+            filters.search || filters.activeOnly !== undefined
               ? handleResetFilters
               : handleCreate
           }

@@ -19,7 +19,7 @@ export interface CategoryForm {
 
 export interface CategoryFilters {
   search?: string
-  active?: boolean
+  activeOnly?: boolean
   page?: number
   limit?: number
 }
