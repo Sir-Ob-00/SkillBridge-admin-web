@@ -14,11 +14,14 @@ import { StatusBadge } from '@/components/common/StatusBadge'
 import { Pagination } from '@/components/common/Pagination'
 import { VerificationDrawer } from '@/components/verifications/VerificationDrawer'
 import {
-  getVerificationRequests,
-  getVerificationById,
+  fetchVerificationArtisans,
+  getVerificationDocuments,
   getVerificationStatistics,
+  VERIFICATION_TABS,
+  type VerificationTab,
+  type VerificationRequest,
+  type VerificationFilters,
 } from '@/services/verifications.service'
-import type { VerificationRequest, VerificationFilters } from '@/services/verifications.service'
 import { artisanVerificationVariant } from '@/types/artisan.types'
 import { format } from 'date-fns'
 import { Search, MoreVertical, Eye, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
@@ -40,8 +43,45 @@ function getInitials(name: string): string {
     .toUpperCase()
 }
 
+const VERIFICATION_TAB_LABELS: Record<VerificationTab, string> = {
+  ALL: 'All',
+  PENDING: 'Pending',
+  UNDER_REVIEW: 'Under Review',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+  CHANGES_REQUESTED: 'Changes Requested',
+}
+
+const VERIFICATION_TAB_EMPTY: Record<VerificationTab, { title: string; description: string }> = {
+  ALL: {
+    title: 'No artisan applications found',
+    description: 'No artisan applications have been submitted yet.',
+  },
+  PENDING: {
+    title: 'No pending artisan applications.',
+    description: 'There are no pending artisan applications to review.',
+  },
+  UNDER_REVIEW: {
+    title: 'No applications under review.',
+    description: 'No applications are currently under review.',
+  },
+  APPROVED: {
+    title: 'No approved artisans.',
+    description: 'No artisans have been approved yet.',
+  },
+  REJECTED: {
+    title: 'No rejected applications.',
+    description: 'No applications have been rejected.',
+  },
+  CHANGES_REQUESTED: {
+    title: 'No change requests.',
+    description: 'No applications have pending change requests.',
+  },
+}
+
 export function VerificationsPageContent() {
   const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<VerificationTab>('ALL')
   const [filters, setFilters] = useState<VerificationFilters>({
     page: 1,
     limit: 10,
@@ -56,30 +96,36 @@ export function VerificationsPageContent() {
     [],
   )
 
+  const selectedStatus = VERIFICATION_TABS[activeTab].status
+
   const { data: verificationsData, isLoading: isLoadingVerifications, error: verificationsError, refetch: refetchVerifications } =
-    useQuery({ queryKey: ['verifications', filters], queryFn: () => getVerificationRequests(filters) })
+    useQuery({
+      queryKey: ['artisan-verifications', selectedStatus, filters],
+      queryFn: () => fetchVerificationArtisans(activeTab, filters),
+    })
 
   const { data: statistics, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['verification-statistics'],
+    queryKey: ['artisan-verifications-statistics'],
     queryFn: getVerificationStatistics,
   })
 
   const { data: verificationDetails, isLoading: isLoadingDetails } = useQuery({
-    queryKey: ['verification-details', selectedVerification?.id],
-    queryFn: () => getVerificationById(selectedVerification!.id),
+    queryKey: ['artisan-verification-details', selectedVerification?.id],
+    queryFn: () => getVerificationDocuments(selectedVerification!.id),
     enabled: !!selectedVerification && isDrawerOpen,
   })
 
   const decisionMutation = useMutation({
-    mutationFn: async (args: { id: string; action: 'approve' | 'reject' | 'request'; note?: string; reason?: string; message?: string }) => {
-      const { approveVerification, rejectVerification, requestMoreInformation } = await import('@/services/verifications.service')
+    mutationFn: async (args: { id: string; action: 'approve' | 'reject' | 'request' | 'note'; note?: string }) => {
+      const { approveVerification, rejectVerification, requestMoreInformation, addVerificationNote } = await import('@/services/verifications.service')
       if (args.action === 'approve') return approveVerification(args.id, { note: args.note })
-      if (args.action === 'reject') return rejectVerification(args.id, { reason: args.reason ?? '' })
-      return requestMoreInformation(args.id, { message: args.message ?? '' })
+      if (args.action === 'reject') return rejectVerification(args.id, { note: args.note ?? '' })
+      if (args.action === 'request') return requestMoreInformation(args.id, { note: args.note ?? '' })
+      return addVerificationNote(args.id, args.note ?? '')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['verifications'] })
-      queryClient.invalidateQueries({ queryKey: ['verification-statistics'] })
+      queryClient.invalidateQueries({ queryKey: ['artisan-verifications'] })
+      queryClient.invalidateQueries({ queryKey: ['artisan-verifications-statistics'] })
       toast.success('Verification updated successfully')
     },
     onError: () => toast.error('Failed to update verification'),
@@ -87,8 +133,10 @@ export function VerificationsPageContent() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => debouncedSearch(e.target.value)
 
-  const handleStatusFilterChange = (status: string | undefined) =>
-    setFilters((prev) => ({ ...prev, status, page: 1 }))
+  const handleTabChange = (tab: VerificationTab) => {
+    setActiveTab(tab)
+    setFilters((prev) => ({ ...prev, page: 1 }))
+  }
 
   const handlePageChange = (page: number) => setFilters((prev) => ({ ...prev, page }))
 
@@ -97,13 +145,16 @@ export function VerificationsPageContent() {
     setIsDrawerOpen(true)
   }
 
-  const handleDecision = async (id: string, action: 'approve' | 'reject' | 'request', payload?: { note?: string; reason?: string; message?: string }) => {
-    await decisionMutation.mutateAsync({ id, action, ...payload })
+  const handleDecision = async (id: string, action: 'approve' | 'reject' | 'request' | 'note', payload?: { note?: string }) => {
+    await decisionMutation.mutateAsync({ id, action, note: payload?.note })
     setIsDrawerOpen(false)
     setSelectedVerification(null)
   }
 
-  const handleResetFilters = () => setFilters({ page: 1, limit: 10, search: '', status: undefined })
+  const handleResetFilters = () => {
+    setFilters({ page: 1, limit: 10, search: '', status: undefined })
+    setActiveTab('ALL')
+  }
 
   if (verificationsError) {
     return (
@@ -150,15 +201,21 @@ export function VerificationsPageContent() {
               onChange={handleSearchChange}
             />
           </div>
-          <Button variant="outline" onClick={handleResetFilters} disabled={!filters.search && !filters.status}>
+          <Button variant="outline" onClick={handleResetFilters} disabled={!filters.search && activeTab === 'ALL'}>
             Reset
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant={filters.status === undefined ? 'primary' : 'outline'} size="sm" onClick={() => handleStatusFilterChange(undefined)}>All</Button>
-          <Button variant={filters.status === 'unverified' ? 'primary' : 'outline'} size="sm" onClick={() => handleStatusFilterChange('unverified')}>Unverified</Button>
-          <Button variant={filters.status === 'verified' ? 'primary' : 'outline'} size="sm" onClick={() => handleStatusFilterChange('verified')}>Verified</Button>
-          <Button variant={filters.status === 'rejected' ? 'primary' : 'outline'} size="sm" onClick={() => handleStatusFilterChange('rejected')}>Rejected</Button>
+          {(Object.keys(VERIFICATION_TABS) as VerificationTab[]).map((tab) => (
+            <Button
+              key={tab}
+              variant={activeTab === tab ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleTabChange(tab)}
+            >
+              {VERIFICATION_TAB_LABELS[tab]}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -242,16 +299,18 @@ export function VerificationsPageContent() {
           )}
         </>
       ) : (
-        <EmptyState
-          title="No verification requests found"
-          description={
-            filters.search || filters.status
-              ? 'No verification requests match your current filters.'
-              : 'No verification requests have been submitted yet.'
-          }
-          actionLabel={filters.search || filters.status ? 'Clear Filters' : undefined}
-          onAction={filters.search || filters.status ? handleResetFilters : undefined}
-        />
+        (() => {
+          const empty = VERIFICATION_TAB_EMPTY[activeTab]
+          const hasSearch = !!filters.search
+          return (
+            <EmptyState
+              title={empty.title}
+              description={hasSearch ? 'No results match your current search.' : empty.description}
+              actionLabel={hasSearch ? 'Clear search' : undefined}
+              onAction={hasSearch ? handleResetFilters : undefined}
+            />
+          )
+        })()
       )}
 
       <VerificationDrawer

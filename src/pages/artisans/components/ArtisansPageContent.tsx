@@ -12,6 +12,7 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { Pagination } from '@/components/common/Pagination'
+import { StatCard } from '@/components/common/StatCard'
 import { ArtisanDetailsDrawer } from '@/components/artisans/ArtisanDetailsDrawer'
 import {
   getArtisans,
@@ -20,10 +21,10 @@ import {
   suspendArtisan,
   unsuspendArtisan,
 } from '@/services/artisans.service'
-import type { Artisan, ArtisanFilters } from '@/types/artisan.types'
+import type { Artisan } from '@/types/artisan.types'
 import { artisanStatus, artisanStatusVariant, artisanVerificationVariant } from '@/types/artisan.types'
 import { format } from 'date-fns'
-import { Search, MoreVertical, Eye, Ban, Check, Star, MapPin } from 'lucide-react'
+import { Search, MoreVertical, Eye, Ban, Check, Star, MapPin, Users, ShieldCheck, XCircle, Clock } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,24 +45,21 @@ function getInitials(name: string): string {
 
 export function ArtisansPageContent() {
   const queryClient = useQueryClient()
-  const [filters, setFilters] = useState<ArtisanFilters>({
-    page: 1,
-    limit: 10,
-    search: '',
-    verification: undefined,
-    suspended: undefined,
-  })
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const debouncedSearch = useMemo(
-    () => debounce((value: string) => setFilters((prev) => ({ ...prev, search: value, page: 1 })), 400),
+    () => debounce((value: string) => setSearch(value), 400),
     [],
   )
 
   const { data: artisansData, isLoading, error, refetch } = useQuery({
-    queryKey: ['artisans', filters],
-    queryFn: () => getArtisans(filters),
+    queryKey: ['artisans', selectedStatus, search, page],
+    queryFn: () => getArtisans({ status: selectedStatus, search, page, limit: 10 }),
   })
 
   const { data: statistics } = useQuery({
@@ -86,15 +84,12 @@ export function ArtisansPageContent() {
     onError: () => toast.error('Failed to update artisan status'),
   })
 
-  const handleSearchChange = (value: string) => debouncedSearch(value)
+  const handleStatusChange = (status: string | undefined) => {
+    setSelectedStatus(status)
+    setPage(1)
+  }
 
-  const handleVerificationChange = (verification: ArtisanFilters['verification']) =>
-    setFilters((prev) => ({ ...prev, verification, page: 1 }))
-
-  const handleSuspendedChange = (suspended: boolean | undefined) =>
-    setFilters((prev) => ({ ...prev, suspended, page: 1 }))
-
-  const handlePageChange = (page: number) => setFilters((prev) => ({ ...prev, page }))
+  const handlePageChange = (page: number) => setPage(page)
 
   const handleViewDetails = (artisan: Artisan) => {
     setSelectedArtisan(artisan)
@@ -108,10 +103,14 @@ export function ArtisansPageContent() {
     }
   }
 
-  const handleResetFilters = () =>
-    setFilters({ page: 1, limit: 10, search: '', verification: undefined, suspended: undefined })
+  const handleResetFilters = () => {
+    setSelectedStatus(undefined)
+    setSearchInput('')
+    setSearch('')
+    setPage(1)
+  }
 
-  const hasFilters = Boolean(filters.search || filters.verification || filters.suspended !== undefined)
+  const hasFilters = Boolean(search || selectedStatus)
   const artisans = artisansData?.items ?? []
 
   if (error) {
@@ -131,15 +130,18 @@ export function ArtisansPageContent() {
     <PageContainer>
       <PageHeader title="Artisans" description="Manage verified and pending artisans" />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
         {statistics ? (
           <>
-            <Stat label="Total Artisans" value={statistics.total} />
-            <Stat label="Verified" value={statistics.active} />
-            <Stat label="Suspended" value={statistics.suspended} variant="warning" />
+            <StatCard title="Total Artisans" value={statistics.total} icon={Users} variant="primary" />
+            <StatCard title="Verified" value={statistics.active} icon={ShieldCheck} variant="success" />
+            <StatCard title="Unverified" value={statistics.pending} icon={Clock} variant="warning" />
+            <StatCard title="Rejected" value={statistics.rejected} icon={XCircle} variant="danger" />
+            <StatCard title="Active" value={statistics.active} icon={ShieldCheck} variant="info" />
+            <StatCard title="Suspended" value={statistics.suspended} icon={Ban} variant="warning" />
           </>
         ) : (
-          [1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)
+          Array.from({ length: 6 }).map((_, i) => <Skeleton key={`skeleton-${i}`} className="h-24" />)
         )}
       </div>
 
@@ -150,8 +152,11 @@ export function ArtisansPageContent() {
             <Input
               placeholder="Search by business, name, or email..."
               className="pl-9"
-              defaultValue={filters.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                setSearchInput(e.target.value)
+                debouncedSearch(e.target.value)
+              }}
             />
           </div>
           <Button variant="outline" onClick={handleResetFilters} disabled={!hasFilters}>
@@ -159,17 +164,22 @@ export function ArtisansPageContent() {
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 border-r border-border pr-2">
-            <Button variant={filters.verification === undefined ? 'primary' : 'outline'} size="sm" onClick={() => handleVerificationChange(undefined)}>All</Button>
-            <Button variant={filters.verification === 'verified' ? 'primary' : 'outline'} size="sm" onClick={() => handleVerificationChange('verified')}>Verified</Button>
-            <Button variant={filters.verification === 'unverified' ? 'primary' : 'outline'} size="sm" onClick={() => handleVerificationChange('unverified')}>Unverified</Button>
-            <Button variant={filters.verification === 'rejected' ? 'primary' : 'outline'} size="sm" onClick={() => handleVerificationChange('rejected')}>Rejected</Button>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant={filters.suspended === undefined ? 'primary' : 'outline'} size="sm" onClick={() => handleSuspendedChange(undefined)}>All</Button>
-            <Button variant={filters.suspended === false ? 'primary' : 'outline'} size="sm" onClick={() => handleSuspendedChange(false)}>Active</Button>
-            <Button variant={filters.suspended === true ? 'primary' : 'outline'} size="sm" onClick={() => handleSuspendedChange(true)}>Suspended</Button>
-          </div>
+          {[
+            { label: 'All', value: undefined },
+            { label: 'Verified', value: 'VERIFIED' },
+            { label: 'Unverified', value: 'UNVERIFIED' },
+            { label: 'Active', value: 'ACTIVE' },
+            { label: 'Rejected', value: 'REJECTED' },
+          ].map((tab) => (
+            <Button
+              key={tab.label}
+              variant={selectedStatus === tab.value ? 'primary' : 'outline'}
+              size="sm"
+              onClick={() => handleStatusChange(tab.value)}
+            >
+              {tab.label}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -281,7 +291,19 @@ export function ArtisansPageContent() {
       ) : (
         <EmptyState
           title="No artisans found"
-          description={hasFilters ? 'No artisans match your current filters.' : 'No artisans have registered yet.'}
+          description={
+            selectedStatus === 'VERIFIED'
+              ? 'No verified artisans found'
+              : selectedStatus === 'UNVERIFIED'
+                ? 'No unverified artisans found'
+                : selectedStatus === 'ACTIVE'
+                  ? 'No active artisans found'
+                  : selectedStatus === 'REJECTED'
+                    ? 'No rejected artisans found'
+                    : hasFilters
+                      ? 'No artisans match your current filters.'
+                      : 'No artisans have registered yet.'
+          }
           actionLabel={hasFilters ? 'Clear Filters' : undefined}
           onAction={hasFilters ? handleResetFilters : undefined}
         />
@@ -298,14 +320,5 @@ export function ArtisansPageContent() {
         onStatusChange={handleStatusToggle}
       />
     </PageContainer>
-  )
-}
-
-function Stat({ label, value, variant }: { label: string; value: number; variant?: 'warning' }) {
-  return (
-    <div className="rounded-lg border border-border p-6">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className={`text-2xl font-bold ${variant === 'warning' ? 'text-warning' : ''}`}>{value}</p>
-    </div>
   )
 }

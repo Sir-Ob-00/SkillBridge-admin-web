@@ -24,8 +24,6 @@ const Analytics = lazy(() => import('@/pages/analytics/Analytics'))
 const Settings = lazy(() => import('@/pages/settings/Settings'))
 const Admins = lazy(() => import('@/pages/admins/Admins'))
 const AuditLogs = lazy(() => import('@/pages/audit-logs/AuditLogs'))
-const Applications = lazy(() => import('@/pages/artisan-applications/Applications'))
-const ApplicationDetails = lazy(() => import('@/pages/artisan-applications/ApplicationDetails'))
 const ModulePlaceholder = lazy(
   () => import('@/pages/placeholders/ModulePlaceholder'),
 )
@@ -182,22 +180,6 @@ const router = createBrowserRouter([
         element: (
           <LazyPage>
             <AuditLogs />
-          </LazyPage>
-        ),
-      },
-      {
-        path: '/dashboard/artisan-applications',
-        element: (
-          <LazyPage>
-            <Applications />
-          </LazyPage>
-        ),
-      },
-      {
-        path: '/dashboard/artisan-applications/:id',
-        element: (
-          <LazyPage>
-            <ApplicationDetails />
           </LazyPage>
         ),
       },

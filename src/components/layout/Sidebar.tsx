@@ -14,7 +14,6 @@ import {
   Wrench,
   ScrollText,
   Flag,
-  FileCheck,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DASHBOARD_ROUTES } from '@/config/routes'
@@ -26,9 +25,8 @@ const navItems = [
   { label: 'Dashboard', href: DASHBOARD_ROUTES.HOME, icon: LayoutDashboard },
   { label: 'Students', href: DASHBOARD_ROUTES.STUDENTS, icon: Users },
   { label: 'Artisans', href: DASHBOARD_ROUTES.ARTISANS, icon: Wrench },
-  { label: 'Artisan Applications', href: '/dashboard/artisan-applications', icon: FileCheck },
   { label: 'Categories', href: DASHBOARD_ROUTES.CATEGORIES, icon: FolderTree },
-  { label: 'Verification', href: DASHBOARD_ROUTES.VERIFICATION, icon: ShieldCheck },
+  { label: 'Artisan Verification', href: DASHBOARD_ROUTES.VERIFICATION, icon: ShieldCheck },
   { label: 'Bookings', href: DASHBOARD_ROUTES.BOOKINGS, icon: BookOpen },
   { label: 'Reviews', href: DASHBOARD_ROUTES.REVIEWS, icon: Star },
   { label: 'Reports', href: DASHBOARD_ROUTES.REPORTS, icon: Flag },

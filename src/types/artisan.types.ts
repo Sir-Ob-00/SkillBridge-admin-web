@@ -77,9 +77,8 @@ export interface Artisan {
 export type ArtisanStatus = 'active' | 'suspended'
 
 export interface ArtisanFilters {
+  status?: string
   search?: string
-  verification?: VerificationStatus
-  suspended?: boolean
   page?: number
   limit?: number
 }

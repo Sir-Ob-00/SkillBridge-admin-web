@@ -26,8 +26,8 @@ interface VerificationDrawerProps {
   onClose: () => void
   onDecision: (
     id: string,
-    action: 'approve' | 'reject' | 'request',
-    payload?: { note?: string; reason?: string; message?: string },
+    action: 'approve' | 'reject' | 'request' | 'note',
+    payload?: { note?: string },
   ) => void
 }
 
@@ -76,14 +76,21 @@ export function VerificationDrawer({
       alert('A rejection reason is required')
       return
     }
-    onDecision(verification.id, 'reject', { reason: rejectReason })
+    onDecision(verification.id, 'reject', { note: rejectReason })
   }
   const handleRequest = () => {
     if (!requestMessage.trim()) {
       alert('A message is required')
       return
     }
-    onDecision(verification.id, 'request', { message: requestMessage })
+    onDecision(verification.id, 'request', { note: requestMessage })
+  }
+  const handleAddNote = () => {
+    if (!note.trim()) {
+      alert('A note is required')
+      return
+    }
+    onDecision(verification.id, 'note', { note })
   }
 
   return (
@@ -161,6 +168,20 @@ export function VerificationDrawer({
 
           {verification.bio && <p className="text-sm text-muted-foreground">{verification.bio}</p>}
 
+          {verification.reviewNotes && (
+            <div className="rounded-md border border-border bg-muted/40 p-3">
+              <p className="text-xs text-muted-foreground">Review Notes</p>
+              <p className="text-sm">{verification.reviewNotes}</p>
+            </div>
+          )}
+
+          {verification.rejectionReason && (
+            <div className="rounded-md border border-border bg-muted/40 p-3">
+              <p className="text-xs text-muted-foreground">Rejection Reason</p>
+              <p className="text-sm">{verification.rejectionReason}</p>
+            </div>
+          )}
+
           <Separator />
 
           <div className="space-y-4">
@@ -209,6 +230,10 @@ export function VerificationDrawer({
               Reject
             </Button>
           </div>
+          <Button variant="secondary" className="w-full" onClick={handleAddNote}>
+            <AlertCircle className="mr-2 size-4" />
+            Add Internal Note
+          </Button>
           <Button variant="ghost" onClick={onClose} className="w-full">
             Close
           </Button>

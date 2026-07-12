@@ -95,39 +95,41 @@ export default function Dashboard() {
 
     return [
       // Users
-      { title: 'Total Users', value: stats.totalUsers ?? 0, icon: Users },
-      { title: 'Total Students', value: stats.totalStudents ?? 0, icon: Users },
-      { title: 'Total Artisans', value: stats.totalArtisans ?? 0, icon: Wrench },
-      { title: 'Total Admins', value: stats.totalAdmins ?? 0, icon: ShieldCheck },
+      { title: 'Total Users', value: stats.totalUsers ?? 0, icon: Users, variant: 'primary' as const },
+      { title: 'Total Students', value: stats.totalStudents ?? 0, icon: Users, variant: 'info' as const },
+      { title: 'Total Artisans', value: stats.totalArtisans ?? 0, icon: Wrench, variant: 'purple' as const },
+      { title: 'Total Admins', value: stats.totalAdmins ?? 0, icon: ShieldCheck, variant: 'secondary' as const },
       // Bookings
-      { title: 'Total Bookings', value: stats.totalBookings ?? 0, icon: BookOpen },
-      { title: 'Active Bookings', value: stats.activeBookings ?? 0, icon: BookOpen },
-      { title: 'Pending Bookings', value: bookingsByStatus?.pending ?? 0, icon: BookOpen },
-      { title: 'Completed Bookings', value: stats.completedBookings ?? 0, icon: BookOpen },
-      { title: 'Cancelled Bookings', value: stats.cancelledBookings ?? 0, icon: BookOpen },
+      { title: 'Total Bookings', value: stats.totalBookings ?? 0, icon: BookOpen, variant: 'cyan' as const },
+      { title: 'Active Bookings', value: stats.activeBookings ?? 0, icon: BookOpen, variant: 'success' as const },
+      { title: 'Pending Bookings', value: bookingsByStatus?.pending ?? 0, icon: BookOpen, variant: 'warning' as const },
+      { title: 'Completed Bookings', value: stats.completedBookings ?? 0, icon: BookOpen, variant: 'info' as const },
+      { title: 'Cancelled Bookings', value: stats.cancelledBookings ?? 0, icon: BookOpen, variant: 'danger' as const },
       // Platform
-      { title: 'Pending Verifications', value: stats.pendingVerifications ?? 0, icon: ShieldCheck },
-      { title: 'Total Reviews', value: stats.totalReviews ?? 0, icon: Star },
-      { title: 'Total Reports', value: stats.totalReports ?? 0, icon: Flag },
-      { title: 'Total Categories', value: stats.totalCategories ?? 0, icon: FolderTree },
+      { title: 'Pending Verifications', value: stats.pendingVerifications ?? 0, icon: ShieldCheck, variant: 'orange' as const },
+      { title: 'Total Reviews', value: stats.totalReviews ?? 0, icon: Star, variant: 'warning' as const },
+      { title: 'Total Reports', value: stats.totalReports ?? 0, icon: Flag, variant: 'danger' as const },
+      { title: 'Total Categories', value: stats.totalCategories ?? 0, icon: FolderTree, variant: 'purple' as const },
       // Revenue & ratings
       {
         title: 'Total Revenue',
         value: `$${(stats.revenue ?? 0).toLocaleString()}`,
         icon: DollarSign,
+        variant: 'success' as const,
       },
       {
         title: 'Average Rating',
         value: (ratings?.overallAverage ?? 0).toFixed(1),
         icon: TrendingUp,
+        variant: 'cyan' as const,
       },
       // Artisan Applications (separate endpoint; skipped if unavailable)
       ...(applicationStats
         ? [
-            { title: 'Pending Applications', value: applicationStats.pending ?? 0, icon: FileCheck },
-            { title: 'Under Review', value: applicationStats.underReview ?? 0, icon: FileCheck },
-            { title: 'Approved Applications', value: applicationStats.approved ?? 0, icon: FileCheck },
-            { title: 'Changes Requested', value: applicationStats.changesRequested ?? 0, icon: FileCheck },
+            { title: 'Pending Applications', value: applicationStats.pending ?? 0, icon: FileCheck, variant: 'warning' as const },
+            { title: 'Under Review', value: applicationStats.underReview ?? 0, icon: FileCheck, variant: 'info' as const },
+            { title: 'Approved Applications', value: applicationStats.approved ?? 0, icon: FileCheck, variant: 'success' as const },
+            { title: 'Changes Requested', value: applicationStats.changesRequested ?? 0, icon: FileCheck, variant: 'orange' as const },
           ]
         : []),
     ]
@@ -226,6 +228,7 @@ export default function Dashboard() {
                 title={card.title}
                 value={card.value}
                 icon={card.icon}
+                variant={card.variant}
               />
             ))}
       </div>

@@ -20,7 +20,7 @@ const DrawerContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'fixed inset-y-0 right-0 z-50 w-full max-w-md border-l border-border bg-background shadow-lg transition-transform duration-300 ease-in-out',
+        'fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background shadow-lg transition-transform duration-300 ease-in-out',
         open ? 'translate-x-0' : 'translate-x-full',
         className,
       )}
@@ -77,7 +77,7 @@ const DrawerBody = ({
 }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
-      className={cn('flex-1 overflow-y-auto p-6', className)}
+      className={cn(        'min-h-0 flex-1 overflow-y-auto p-6', className)}
       {...props}
     />
   )
