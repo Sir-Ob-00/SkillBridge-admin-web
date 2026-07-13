@@ -3,11 +3,14 @@ import { Drawer, DrawerBody, DrawerContent, DrawerFooter, DrawerHeader, DrawerOv
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { format } from 'date-fns'
-import { Ban, Check, Mail, Phone, MapPin, Star, Briefcase, Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Ban, Check, Mail, Phone, MapPin, Star, Briefcase, Image as ImageIcon, Loader2, ArrowUpDown } from 'lucide-react'
 import type { Artisan } from '@/types/artisan.types'
 import { artisanStatus, artisanStatusVariant, artisanVerificationVariant } from '@/types/artisan.types'
+import { formatStatusLabel } from '@/components/common/StatusBadge'
 
 interface ArtisanDetailsDrawerProps {
   artisan: Artisan | null
@@ -15,6 +18,7 @@ interface ArtisanDetailsDrawerProps {
   isOpen: boolean
   onClose: () => void
   onStatusChange: (id: string, status: 'active' | 'suspended') => void
+  onApplicationStatusChange?: (id: string, status: string, notes?: string) => Promise<void>
 }
 
 function getInitials(name: string): string {
@@ -27,14 +31,20 @@ function getInitials(name: string): string {
     .toUpperCase()
 }
 
+const APPLICATION_STATUS_OPTIONS = ['UNDER_REVIEW', 'ACTIVE', 'REJECTED', 'CHANGES_REQUESTED'] as const
+
 export function ArtisanDetailsDrawer({
   artisan,
   isLoading,
   isOpen,
   onClose,
   onStatusChange,
+  onApplicationStatusChange,
 }: ArtisanDetailsDrawerProps) {
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const [showStatusActions, setShowStatusActions] = useState(false)
+  const [selectedAppStatus, setSelectedAppStatus] = useState<string | null>(null)
+  const [statusNotes, setStatusNotes] = useState('')
 
   const handleStatusToggle = async () => {
     if (!artisan) return
@@ -42,6 +52,19 @@ export function ArtisanDetailsDrawer({
     setIsActionLoading(true)
     try {
       await onStatusChange(artisan.id, status)
+    } finally {
+      setIsActionLoading(false)
+    }
+  }
+
+  const handleApplicationStatusChange = async (newStatus: string) => {
+    if (!artisan || !onApplicationStatusChange) return
+    setIsActionLoading(true)
+    try {
+      await onApplicationStatusChange(artisan.id, newStatus, statusNotes || undefined)
+      setShowStatusActions(false)
+      setSelectedAppStatus(null)
+      setStatusNotes('')
     } finally {
       setIsActionLoading(false)
     }
@@ -184,13 +207,100 @@ export function ArtisanDetailsDrawer({
 
           {/* Application status */}
           <Separator />
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Application Status</span>
-            <span className="font-medium">{artisan.applicationStatus}</span>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Application Status</span>
+              <StatusBadge status={formatStatusLabel(artisan.applicationStatus)} variant="warning" />
+            </div>
+            {artisan.rejectionReason && (
+              <div className="text-xs text-danger">Rejection reason: {artisan.rejectionReason}</div>
+            )}
+            {onApplicationStatusChange && (
+              <>
+                {!showStatusActions ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowStatusActions(true)}
+                  >
+                    <ArrowUpDown className="mr-2 size-4" />
+                    Change Status
+                  </Button>
+                ) : (
+                  <div className="space-y-3 rounded-md border border-border p-3">
+                    <p className="text-xs font-medium text-muted-foreground">Select new status</p>
+                    <div className="flex flex-wrap gap-2">
+                      {APPLICATION_STATUS_OPTIONS.map((option) => {
+                        const isActive = selectedAppStatus === option
+                        const variant = option === 'ACTIVE' ? 'primary' as const
+                          : option === 'REJECTED' ? 'danger' as const
+                          : 'outline' as const
+                        return (
+                          <Button
+                            key={option}
+                            size="sm"
+                            variant={isActive ? variant : 'outline'}
+                            onClick={() => {
+                              setSelectedAppStatus(option)
+                              if (option !== 'rejected' && option !== 'changes_requested') {
+                                setStatusNotes('')
+                              }
+                            }}
+                          >
+                            {formatStatusLabel(option)}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    {(selectedAppStatus === 'REJECTED' || selectedAppStatus === 'CHANGES_REQUESTED') && (
+                      <div className="space-y-2">
+                        <Label htmlFor="status-notes" className="text-xs">
+                          {selectedAppStatus === 'REJECTED' ? 'Rejection reason' : 'Message to artisan'}
+                        </Label>
+                        <Input
+                          id="status-notes"
+                          value={statusNotes}
+                          onChange={(e) => setStatusNotes(e.target.value)}
+                          placeholder={
+                            selectedAppStatus === 'REJECTED'
+                              ? 'Enter rejection reason...'
+                              : 'Describe what changes are needed...'
+                          }
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        disabled={!selectedAppStatus || isActionLoading}
+                        onClick={() => selectedAppStatus && handleApplicationStatusChange(selectedAppStatus)}
+                      >
+                        {isActionLoading ? (
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                        ) : (
+                          <Check className="mr-2 size-4" />
+                        )}
+                        Apply
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowStatusActions(false)
+                          setSelectedAppStatus(null)
+                          setStatusNotes('')
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          {artisan.rejectionReason && (
-            <div className="text-xs text-danger">Rejection reason: {artisan.rejectionReason}</div>
-          )}
         </DrawerBody>
 
         <DrawerFooter className="flex-col gap-3">

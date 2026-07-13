@@ -46,3 +46,15 @@ export async function unsuspendArtisan(id: string): Promise<Artisan> {
   )
   return data.data
 }
+
+export async function updateArtisanApplicationStatus(
+  id: string,
+  applicationStatus: string,
+  notes?: string,
+): Promise<Artisan> {
+  const { data } = await apiClient.patch<ApiResponse<Artisan>>(
+    API_ENDPOINTS.ARTISANS.UPDATE_STATUS(id),
+    { applicationStatus, notes },
+  )
+  return data.data
+}

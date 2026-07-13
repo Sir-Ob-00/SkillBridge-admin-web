@@ -20,6 +20,7 @@ import {
   getArtisanById,
   suspendArtisan,
   unsuspendArtisan,
+  updateArtisanApplicationStatus,
 } from '@/services/artisans.service'
 import type { Artisan } from '@/types/artisan.types'
 import { artisanStatus, artisanStatusVariant, artisanVerificationVariant } from '@/types/artisan.types'
@@ -84,6 +85,18 @@ export function ArtisansPageContent() {
     onError: () => toast.error('Failed to update artisan status'),
   })
 
+  const applicationStatusMutation = useMutation({
+    mutationFn: ({ id, status, notes }: { id: string; status: string; notes?: string }) =>
+      updateArtisanApplicationStatus(id, status, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['artisans'] })
+      queryClient.invalidateQueries({ queryKey: ['artisan-details'] })
+      queryClient.invalidateQueries({ queryKey: ['artisans-statistics'] })
+      toast.success('Application status updated successfully')
+    },
+    onError: () => toast.error('Failed to update application status'),
+  })
+
   const handleStatusChange = (status: string | undefined) => {
     setSelectedStatus(status)
     setPage(1)
@@ -101,6 +114,10 @@ export function ArtisansPageContent() {
     if (selectedArtisan?.id === id) {
       setSelectedArtisan((prev) => (prev ? { ...prev, isSuspended: status === 'suspended' } : null))
     }
+  }
+
+  const handleApplicationStatusChange = async (id: string, status: string, notes?: string) => {
+    await applicationStatusMutation.mutateAsync({ id, status, notes })
   }
 
   const handleResetFilters = () => {
@@ -318,6 +335,7 @@ export function ArtisansPageContent() {
           setSelectedArtisan(null)
         }}
         onStatusChange={handleStatusToggle}
+        onApplicationStatusChange={handleApplicationStatusChange}
       />
     </PageContainer>
   )
