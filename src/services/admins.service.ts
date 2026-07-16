@@ -1,5 +1,5 @@
 ﻿import { API_ENDPOINTS } from '@/constants/api-endpoints'
-import type { ApiResponse } from '@/types/api.types'
+import { type ApiResponse } from '@/types/api.types'
 import type {
   Admin,
   PaginatedAdminResponse,
@@ -10,12 +10,23 @@ import type {
 } from '@/types/admin.types'
 import apiClient from '@/api/axios'
 
-export async function getAdmins(filters?: AdminFilters): Promise<PaginatedAdminResponse> {
-  const { data } = await apiClient.get<ApiResponse<PaginatedAdminResponse>>(
+export async function getAdmins(filters?: AdminFilters): Promise<PaginatedAdminResponse | null> {
+  interface BackendPaginatedResponse {
+    items: Admin[]
+    meta: { page: number; pageSize: number; totalItems: number; totalPages: number }
+  }
+  const { data } = await apiClient.get<ApiResponse<BackendPaginatedResponse>>(
     API_ENDPOINTS.USERS.ADMINS,
     { params: filters },
   )
-  return data.data
+  if (!data.data?.items) return null
+  return {
+    data: data.data.items,
+    total: data.data.meta.totalItems,
+    page: data.data.meta.page,
+    limit: data.data.meta.pageSize,
+    totalPages: data.data.meta.totalPages,
+  }
 }
 
 export async function getAdminById(id: string): Promise<Admin> {

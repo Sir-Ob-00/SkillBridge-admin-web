@@ -304,7 +304,7 @@ export default function Dashboard() {
                       border: `1px solid ${colors.border}`,
                       borderRadius: '8px',
                     }}
-                    formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
+                    formatter={(value) => [`GHC ${Number(value).toLocaleString()}`, 'Revenue']}
                   />
                   <Legend />
                   <Bar dataKey="revenue" fill={colors.success} radius={[4, 4, 0, 0]} />

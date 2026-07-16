@@ -25,9 +25,6 @@ const Analytics = lazy(() => import('@/pages/analytics/Analytics'))
 const Settings = lazy(() => import('@/pages/settings/Settings'))
 const Admins = lazy(() => import('@/pages/admins/Admins'))
 const AuditLogs = lazy(() => import('@/pages/audit-logs/AuditLogs'))
-const ModulePlaceholder = lazy(
-  () => import('@/pages/placeholders/ModulePlaceholder'),
-)
 const NotFound = lazy(() => import('@/pages/errors/NotFound'))
 const Unauthorized = lazy(() => import('@/pages/errors/Unauthorized'))
 
@@ -149,22 +146,6 @@ const router = createBrowserRouter([
         element: (
           <LazyPage>
             <Analytics />
-          </LazyPage>
-        ),
-      },
-      {
-        path: DASHBOARD_ROUTES.NOTIFICATIONS,
-        element: (
-          <LazyPage>
-            <ModulePlaceholder />
-          </LazyPage>
-        ),
-      },
-      {
-        path: DASHBOARD_ROUTES.PAYMENTS,
-        element: (
-          <LazyPage>
-            <ModulePlaceholder />
           </LazyPage>
         ),
       },

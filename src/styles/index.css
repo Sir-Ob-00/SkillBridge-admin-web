@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
@@ -16,28 +16,9 @@
   --color-warning-foreground: #ffffff;
   --color-danger: #dc2626;
   --color-danger-foreground: #ffffff;
-
-  --color-background: #f9feff;
-  --color-foreground: #0f172a;
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0f172a;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-accent: #fdf2f8;
-  --color-accent-foreground: #8b003b;
+  --color-ring: #8b003b;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
-  --color-border: #e2e8f0;
-  --color-input: #e2e8f0;
-  --color-ring: #8b003b;
-
-  --color-sidebar: #ffffff;
-  --color-sidebar-foreground: #334155;
-  --color-sidebar-border: #e2e8f0;
-  --color-sidebar-accent: #fdf2f8;
-  --color-sidebar-accent-foreground: #8b003b;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -63,6 +44,48 @@
   --color-sidebar-border: #334155;
   --color-sidebar-accent: #3b0a24;
   --color-sidebar-accent-foreground: #f8fafc;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-foreground);
+  --color-border: var(--color-border);
+  --color-input: var(--color-input);
+  --color-sidebar: var(--color-sidebar);
+  --color-sidebar-foreground: var(--color-sidebar-foreground);
+  --color-sidebar-border: var(--color-sidebar-border);
+  --color-sidebar-accent: var(--color-sidebar-accent);
+  --color-sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
+}
+
+:root {
+  --color-background: #f9feff;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-accent: #fdf2f8;
+  --color-accent-foreground: #8b003b;
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #334155;
+  --color-sidebar-border: #e2e8f0;
+  --color-sidebar-accent: #fdf2f8;
+  --color-sidebar-accent-foreground: #8b003b;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
 }
 
 @layer base {
