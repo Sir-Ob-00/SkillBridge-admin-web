@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { StatusBadge } from '@/components/common/StatusBadge'
-import { Loader2, Mail, Phone, MapPin, Briefcase, Calendar, CheckCircle, XCircle, AlertCircle, ImageIcon } from 'lucide-react'
+import { Loader2, Mail, Phone, MapPin, Briefcase, Calendar, CheckCircle, XCircle, AlertCircle, ImageIcon, Images } from 'lucide-react'
 import type { VerificationRequest } from '@/services/verifications.service'
 import { artisanVerificationVariant } from '@/types/artisan.types'
 
@@ -221,6 +221,32 @@ export function VerificationDrawer({
               </div>
             )}
           </div>
+
+          {verification.portfolio && verification.portfolio.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <Images className="size-4 text-muted-foreground" />
+                  Portfolio ({verification.portfolio.length})
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {verification.portfolio.map((item) => (
+                    <div key={item.id} className="rounded-md border border-border overflow-hidden">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.caption || 'Portfolio image'}
+                        className="w-full h-36 object-cover"
+                      />
+                      {item.caption && (
+                        <p className="text-xs text-muted-foreground p-2 truncate">{item.caption}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           <Separator />
 
