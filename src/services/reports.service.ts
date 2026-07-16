@@ -9,8 +9,27 @@ import type {
   DismissReportPayload,
   AddReportNotePayload,
   ReportStatistics,
+  UpdateReportStatusPayload,
 } from '@/types/report.types'
 import apiClient from '@/api/axios'
+
+export async function exportReports(): Promise<Blob> {
+  const { data } = await apiClient.get<Blob>(API_ENDPOINTS.REPORTS.EXPORT, {
+    responseType: 'blob',
+  })
+  return data
+}
+
+export async function updateReportStatus(
+  id: string,
+  payload: UpdateReportStatusPayload,
+): Promise<Report> {
+  const { data } = await apiClient.patch<ApiResponse<Report>>(
+    API_ENDPOINTS.REPORTS.UPDATE_STATUS(id),
+    payload,
+  )
+  return data.data
+}
 
 export async function getReports(
   params?: ReportFilters,

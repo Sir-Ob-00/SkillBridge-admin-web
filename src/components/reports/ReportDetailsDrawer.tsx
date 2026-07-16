@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -24,7 +26,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ReportStatusBadge } from './ReportStatusBadge'
-import { User, ShieldAlert, FileText, Calendar, Copy, CheckCircle, XCircle } from 'lucide-react'
+import { useAuthStore } from '@/store/auth.store'
+import { User, ShieldAlert, FileText, Calendar, Copy, CheckCircle, XCircle, StickyNote } from 'lucide-react'
 import type { Report } from '@/types/report.types'
 
 interface ReportDetailsDrawerProps {
@@ -37,6 +40,7 @@ interface ReportDetailsDrawerProps {
     action: 'assign' | 'resolve' | 'dismiss',
     payload?: { adminId?: string; resolution?: string; reason?: string; internalNote?: string },
   ) => void
+  onAddNote?: (id: string, payload: { content: string; isInternal: boolean }) => void
   isActionLoading?: boolean
 }
 
@@ -56,14 +60,20 @@ export function ReportDetailsDrawer({
   isOpen,
   onClose,
   onDecision,
+  onAddNote,
   isActionLoading = false,
 }: ReportDetailsDrawerProps) {
   const [isAssignOpen, setIsAssignOpen] = useState(false)
   const [isResolveOpen, setIsResolveOpen] = useState(false)
   const [isDismissOpen, setIsDismissOpen] = useState(false)
+  const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [adminId, setAdminId] = useState('')
   const [resolution, setResolution] = useState('')
   const [reason, setReason] = useState('')
+  const [noteContent, setNoteContent] = useState('')
+  const [isNoteInternal, setIsNoteInternal] = useState(true)
+
+  const currentAdminId = useAuthStore((s) => s.admin?.id)
 
   if (isLoading) {
     return (
@@ -199,13 +209,22 @@ export function ReportDetailsDrawer({
               Dismiss
             </Button>
           )}
+          {onAddNote && (
+            <Button variant="outline" className="w-full" onClick={() => setIsNoteOpen(true)} disabled={isActionLoading}>
+              <StickyNote className="mr-2 size-4" />
+              Add Note
+            </Button>
+          )}
           <Button variant="ghost" onClick={onClose} className="w-full">
             Close
           </Button>
         </DrawerFooter>
       </DrawerContent>
 
-      <Dialog open={isAssignOpen} onOpenChange={(open) => !open && setIsAssignOpen(false)}>
+      <Dialog open={isAssignOpen} onOpenChange={(open) => {
+        if (!open) setIsAssignOpen(false)
+        else if (currentAdminId && !adminId) setAdminId(currentAdminId)
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign Report</DialogTitle>
@@ -213,14 +232,14 @@ export function ReportDetailsDrawer({
           </DialogHeader>
           <div className="space-y-2 py-4">
             <Label htmlFor="adminId">Admin ID</Label>
-            <Input id="adminId" placeholder="Admin user ID" value={adminId} onChange={(e) => setAdminId(e.target.value)} />
+            <Input id="adminId" placeholder="Admin user ID" value={adminId} defaultValue={currentAdminId} onChange={(e) => setAdminId(e.target.value)} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAssignOpen(false)} disabled={isActionLoading}>Cancel</Button>
             <Button
               variant="primary"
               onClick={() => {
-                onDecision(report.id, 'assign', { adminId })
+                onDecision(report.id, 'assign', { adminId: adminId || currentAdminId })
                 setIsAssignOpen(false)
               }}
               disabled={isActionLoading}
@@ -278,6 +297,46 @@ export function ReportDetailsDrawer({
               disabled={isActionLoading}
             >
               Dismiss
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isNoteOpen} onOpenChange={(open) => !open && setIsNoteOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Note</DialogTitle>
+            <DialogDescription>Add an internal or public note to this report.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="noteContent">Note</Label>
+              <Textarea
+                id="noteContent"
+                placeholder="Write your note..."
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch id="isInternal" checked={isNoteInternal} onCheckedChange={setIsNoteInternal} />
+              <Label htmlFor="isInternal" className="cursor-pointer">Internal note (not visible to reporter)</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNoteOpen(false)} disabled={isActionLoading}>Cancel</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                onAddNote?.(report.id, { content: noteContent, isInternal: isNoteInternal })
+                setIsNoteOpen(false)
+                setNoteContent('')
+                setIsNoteInternal(true)
+              }}
+              disabled={isActionLoading || !noteContent.trim()}
+            >
+              Add Note
             </Button>
           </DialogFooter>
         </DialogContent>

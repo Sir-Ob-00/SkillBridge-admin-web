@@ -83,7 +83,9 @@ export const API_ENDPOINTS = {
   REPORTS: {
     LIST: '/admin/reports',
     STATISTICS: '/admin/reports/statistics',
+    EXPORT: '/admin/reports/export',
     DETAILS: (id: string) => `/admin/reports/${id}`,
+    UPDATE_STATUS: (id: string) => `/admin/reports/${id}/status`,
     ASSIGN: (id: string) => `/admin/reports/${id}/assign`,
     RESOLVE: (id: string) => `/admin/reports/${id}/resolve`,
     DISMISS: (id: string) => `/admin/reports/${id}/dismiss`,

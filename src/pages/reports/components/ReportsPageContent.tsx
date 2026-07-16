@@ -19,11 +19,13 @@ import {
   assignReport,
   resolveReport,
   dismissReport,
+  addReportNote,
+  exportReports,
   getReportStatistics,
 } from '@/services/reports.service'
 import type { Report, ReportFilters, ReportStatus } from '@/types/report.types'
 import { format } from 'date-fns'
-import { Search, MoreVertical, Eye, RefreshCw, Flag, CheckCircle } from 'lucide-react'
+import { Search, MoreVertical, Eye, RefreshCw, Flag, CheckCircle, Download } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,6 +96,34 @@ export function ReportsPageContent() {
     onError: () => toast.error('Failed to update report'),
   })
 
+  const noteMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { content: string; isInternal: boolean } }) =>
+      addReportNote(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] })
+      queryClient.invalidateQueries({ queryKey: ['report-details'] })
+      toast.success('Note added successfully')
+    },
+    onError: () => toast.error('Failed to add note'),
+  })
+
+  const handleExport = async () => {
+    try {
+      const blob = await exportReports()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `reports-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      toast.success('Reports exported successfully')
+    } catch {
+      toast.error('Failed to export reports')
+    }
+  }
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => debouncedSearch(e.target.value)
   const handleStatusFilterChange = (status: ReportStatus | undefined) => setFilters((prev) => ({ ...prev, status, page: 1 }))
   const handlePageChange = (page: number) => setFilters((prev) => ({ ...prev, page }))
@@ -126,10 +156,16 @@ export function ReportsPageContent() {
         title="Reports"
         description="Investigate and resolve incidents reported across the SkillBridge platform."
         actions={
-          <Button variant="outline" onClick={() => refetchReports()} disabled={isLoadingReports}>
-            <RefreshCw className={`size-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="size-4 mr-2" />
+              Export
+            </Button>
+            <Button variant="outline" onClick={() => refetchReports()} disabled={isLoadingReports}>
+              <RefreshCw className={`size-4 mr-2 ${isLoadingReports ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
@@ -277,7 +313,8 @@ export function ReportsPageContent() {
           setSelectedReport(null)
         }}
         onDecision={handleDecision}
-        isActionLoading={decisionMutation.isPending}
+        onAddNote={(id, payload) => noteMutation.mutate({ id, payload })}
+        isActionLoading={decisionMutation.isPending || noteMutation.isPending}
       />
     </PageContainer>
   )

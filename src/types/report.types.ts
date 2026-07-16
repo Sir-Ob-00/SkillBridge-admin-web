@@ -67,3 +67,7 @@ export interface AddReportNotePayload {
   content: string
   isInternal: boolean
 }
+
+export interface UpdateReportStatusPayload {
+  status: ReportStatus
+}
