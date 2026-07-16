@@ -1,9 +1,9 @@
 export type ApplicationStatus =
-  | 'pending'
-  | 'under_review'
-  | 'approved'
-  | 'rejected'
-  | 'changes_requested'
+  | 'PENDING_REVIEW'
+  | 'UNDER_REVIEW'
+  | 'ACTIVE'
+  | 'REJECTED'
+  | 'CHANGES_REQUESTED'
 
 export type ApplicationAction = 'approve' | 'reject' | 'request_changes'
 

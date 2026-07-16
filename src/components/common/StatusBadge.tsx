@@ -32,9 +32,10 @@ export function StatusBadge({
   )
 }
 
-/** Turns a snake/space status into a Title Cased label, e.g. `under_review` -> `Under Review`. */
+/** Turns a snake/space status into a Title Cased label, e.g. `UNDER_REVIEW` -> `Under Review`. */
 export function formatStatusLabel(status: string): string {
   return status
+    .toLowerCase()
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (character) => character.toUpperCase())
 }
