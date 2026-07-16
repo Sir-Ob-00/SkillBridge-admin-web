@@ -38,7 +38,7 @@ export function AnalyticsKpiCards({ metrics, isLoading }: AnalyticsKpiCardsProps
       {kpiCards.map((card) => {
         const Icon = card.icon
         const formattedValue =
-          card.format === 'currency' ? `$${(card.value as number).toLocaleString()}` : (card.value as number).toLocaleString()
+          card.format === 'currency' ? `GHC ${(card.value as number).toLocaleString()}` : (card.value as number).toLocaleString()
 
         return (
           <Card key={card.title}>

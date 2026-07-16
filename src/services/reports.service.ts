@@ -34,11 +34,21 @@ export async function updateReportStatus(
 export async function getReports(
   params?: ReportFilters,
 ): Promise<PaginatedReportResponse> {
-  const { data } = await apiClient.get<ApiResponse<PaginatedReportResponse>>(
+  interface BackendPaginatedResponse {
+    items: Report[]
+    meta: { page: number; pageSize: number; totalItems: number; totalPages: number }
+  }
+  const { data } = await apiClient.get<ApiResponse<BackendPaginatedResponse>>(
     API_ENDPOINTS.REPORTS.LIST,
     { params },
   )
-  return data.data ?? emptyPage<Report>()
+  if (!data.data) return emptyPage<Report>()
+  return {
+    items: data.data.items,
+    page: data.data.meta.page,
+    totalPages: data.data.meta.totalPages,
+    totalItems: data.data.meta.totalItems,
+  }
 }
 
 export async function getReportById(id: string): Promise<Report> {

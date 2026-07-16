@@ -243,7 +243,7 @@ export function ArtisanDetailsDrawer({
                             variant={isActive ? variant : 'outline'}
                             onClick={() => {
                               setSelectedAppStatus(option)
-                              if (option !== 'rejected' && option !== 'changes_requested') {
+                              if (option !== 'REJECTED' && option !== 'CHANGES_REQUESTED') {
                                 setStatusNotes('')
                               }
                             }}

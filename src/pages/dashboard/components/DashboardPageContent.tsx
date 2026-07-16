@@ -119,7 +119,7 @@ export default function Dashboard() {
       // Revenue & ratings
       {
         title: 'Total Revenue',
-        value: `$${(stats.revenue ?? 0).toLocaleString()}`,
+        value: `GHC ${(stats.revenue ?? 0).toLocaleString()}`,
         icon: DollarSign,
         variant: 'success' as const,
       },

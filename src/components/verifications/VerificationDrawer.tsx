@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { StatusBadge } from '@/components/common/StatusBadge'
-import { Loader2, Mail, Phone, MapPin, Briefcase, Calendar, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Loader2, Mail, Phone, MapPin, Briefcase, Calendar, CheckCircle, XCircle, AlertCircle, ImageIcon } from 'lucide-react'
 import type { VerificationRequest } from '@/services/verifications.service'
 import { artisanVerificationVariant } from '@/types/artisan.types'
 
@@ -181,6 +181,46 @@ export function VerificationDrawer({
               <p className="text-sm">{verification.rejectionReason}</p>
             </div>
           )}
+
+          <Separator />
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <ImageIcon className="size-4 text-muted-foreground" />
+              Verification Document
+            </h4>
+            {verification.verificationDoc ? (
+              <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Institution</p>
+                    <p className="text-sm font-medium">{verification.verificationDoc.institution || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Student ID</p>
+                    <p className="text-sm font-medium">{verification.verificationDoc.studentId || '—'}</p>
+                  </div>
+                </div>
+                {verification.verificationDoc.verificationImageUrl ? (
+                  <div className="rounded-md border border-border overflow-hidden">
+                    <img
+                      src={verification.verificationDoc.verificationImageUrl}
+                      alt="Student ID verification"
+                      className="w-full h-auto max-h-80 object-contain bg-muted"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32 rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground text-sm">
+                    No verification photo uploaded
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-32 rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground text-sm">
+                Verification image unavailable
+              </div>
+            )}
+          </div>
 
           <Separator />
 

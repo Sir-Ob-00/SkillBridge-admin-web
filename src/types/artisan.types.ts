@@ -39,6 +39,14 @@ export interface ArtisanService {
   category?: { id: string; name: string }
 }
 
+export interface VerificationDocument {
+  institution?: string | null
+  studentId?: string | null
+  verificationImageUrl?: string | null
+  status?: string | null
+  [key: string]: unknown
+}
+
 export interface ArtisanAvailability {
   id: string
   day: string
@@ -71,7 +79,7 @@ export interface Artisan {
   categories?: ArtisanCategoryRef[]
   services?: ArtisanService[]
   availability?: ArtisanAvailability[]
-  verificationDoc?: unknown | null
+  verificationDoc?: VerificationDocument | null
 }
 
 export type ArtisanStatus = 'active' | 'suspended'

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { debounce } from 'lodash-es'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -23,6 +23,7 @@ import {
   exportReports,
   getReportStatistics,
 } from '@/services/reports.service'
+import { getAdminSocket } from '@/sockets/admin.socket'
 import type { Report, ReportFilters, ReportStatus } from '@/types/report.types'
 import { format } from 'date-fns'
 import { Search, MoreVertical, Eye, RefreshCw, Flag, CheckCircle, Download } from 'lucide-react'
@@ -137,6 +138,21 @@ export function ReportsPageContent() {
     setSelectedReport(null)
   }
   const handleResetFilters = () => setFilters({ page: 1, limit: 10, search: '', status: undefined })
+
+  const handleSocketEvent = useCallback((event: string) => {
+    if (event === 'report_submitted') {
+      refetchReports()
+      queryClient.invalidateQueries({ queryKey: ['report-statistics'] })
+    }
+  }, [refetchReports, queryClient])
+
+  useEffect(() => {
+    const socket = getAdminSocket()
+    socket.onNotification(handleSocketEvent)
+    return () => {
+      socket.offNotification(handleSocketEvent)
+    }
+  }, [handleSocketEvent])
 
   const reports = reportsData?.items ?? []
   const hasFilters = Boolean(filters.search || filters.status)
