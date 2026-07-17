@@ -8,7 +8,6 @@ export const PERMISSIONS = {
   BOOKINGS_MANAGE: 'bookings:manage',
   REPORTS_VIEW: 'reports:view',
   SETTINGS_MANAGE: 'settings:manage',
-  ADMINS_MANAGE: 'admins:manage',
   AUDIT_LOGS_VIEW: 'audit_logs:view',
 } as const
 

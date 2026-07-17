@@ -19,7 +19,6 @@ export const DASHBOARD_ROUTES = {
   REPORTS: '/dashboard/reports',
   ANALYTICS: '/dashboard/analytics',
   SETTINGS: '/dashboard/settings',
-  ADMINS: '/dashboard/admins',
   AUDIT_LOGS: '/dashboard/audit-logs',
 } as const
 

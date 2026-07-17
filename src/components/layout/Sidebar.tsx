@@ -7,7 +7,6 @@ import {
   Settings,
   ShieldCheck,
   Star,
-  UserCog,
   Users,
   Wrench,
   ScrollText,
@@ -32,7 +31,6 @@ const navItems = [
   { label: 'Reports', href: DASHBOARD_ROUTES.REPORTS, icon: Flag },
   { label: 'Analytics', href: DASHBOARD_ROUTES.ANALYTICS, icon: BarChart3 },
   { label: 'Settings', href: DASHBOARD_ROUTES.SETTINGS, icon: Settings },
-  { label: 'Admins', href: DASHBOARD_ROUTES.ADMINS, icon: UserCog },
   { label: 'Audit Logs', href: DASHBOARD_ROUTES.AUDIT_LOGS, icon: ScrollText },
 ] as const
 

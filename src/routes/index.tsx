@@ -23,7 +23,6 @@ const Reviews = lazy(() => import('@/pages/reviews/Reviews'))
 const Reports = lazy(() => import('@/pages/reports/Reports'))
 const Analytics = lazy(() => import('@/pages/analytics/Analytics'))
 const Settings = lazy(() => import('@/pages/settings/Settings'))
-const Admins = lazy(() => import('@/pages/admins/Admins'))
 const AuditLogs = lazy(() => import('@/pages/audit-logs/AuditLogs'))
 const NotFound = lazy(() => import('@/pages/errors/NotFound'))
 const Unauthorized = lazy(() => import('@/pages/errors/Unauthorized'))
@@ -154,14 +153,6 @@ const router = createBrowserRouter([
         element: (
           <LazyPage>
             <Settings />
-          </LazyPage>
-        ),
-      },
-      {
-        path: DASHBOARD_ROUTES.ADMINS,
-        element: (
-          <LazyPage>
-            <Admins />
           </LazyPage>
         ),
       },

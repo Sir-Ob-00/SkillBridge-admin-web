@@ -118,7 +118,6 @@ export const API_ENDPOINTS = {
     LIST: '/admin/users',
     STUDENTS: '/admin/users/students',
     ARTISANS: '/admin/users/artisans',
-    ADMINS: '/admin/users/admins',
     DETAILS: (id: string) => `/admin/users/${id}`,
     CREATE: '/admin/users',
     UPDATE: (id: string) => `/admin/users/${id}`,
